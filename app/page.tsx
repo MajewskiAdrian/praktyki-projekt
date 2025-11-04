@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="h-screen w-screen bg-gray-100 overflow-hidden fixed">
 
       <header className="bg-gray-300 grid grid-cols-3 items-center px-6 py-4">
         <div></div> 
