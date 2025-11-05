@@ -1,26 +1,32 @@
-'use client';
-import dynamic from 'next/dynamic';
+"use client";
+import dynamic from "next/dynamic";
 
-// dynamiczny import komponentu (bo Leaflet działa tylko po stronie klienta)
-const Map = dynamic(() => import('./components/Map'), { ssr: false });
+// import of component with leaflet map, client-side only
+const Map = dynamic(() => import("./components/Map"), { ssr: false });
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100">
-      <header className="bg-gray-300 flex justify-between items-center px-6 py-4">
-        <div className="text-black font-semibold">Nazwa</div>
+      <header className="bg-gray-300 flex justify-between items-center px-6 py-4 mb-6 rounded-b-sm">
+        <div className="text-black font-semibold m-0">Nazwa</div>
         <div className="w-10 h-10 bg-gray-400 rounded-full"></div>
       </header>
 
-      <section className="p-6 grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-gray-300 rounded-lg h-[400px] overflow-hidden">
-          <Map />
-        </div>
-        <div className="flex flex-col gap-6">
-          <div className="bg-gray-300 rounded-lg h-[180px]"></div>
-          <div className="bg-gray-300 rounded-lg h-[180px]"></div>
-        </div>
-      </section>
+      {/* Simplified, resilient layout: fixed-height map wrapper to avoid 0px height issues */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 h-dvh w-full overflow-hidden p-6">
+  {/* Left collumn - map*/}
+  <div className="bg-gray-300 rounded-lg h-[90%] w-full overflow-hidden mb-20">
+    <Map />
+  </div>
+
+  {/* right collumn - scrolling list */}
+  <div className="flex flex-col gap-6 h-[90%] w-full mb-20 overflow-y-auto scrollbar-hide pr-2">
+    <div className="bg-gray-300 rounded-lg h-3/5 shrink-0"></div>
+    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
+    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
+    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
+  </div>
+</section>
     </main>
   );
 }
