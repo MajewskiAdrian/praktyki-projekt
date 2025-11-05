@@ -39,3 +39,12 @@ body::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer i starszy Edge */
+  scrollbar-width: none; /* Firefox */
+}
