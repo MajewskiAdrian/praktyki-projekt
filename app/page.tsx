@@ -1,5 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
+import EventsList from "./components/EventsList";
+import AddEventForm from "./components/AddEventForm";
 
 // import of component with leaflet map, client-side only
 const Map = dynamic(() => import("./components/Map"), { ssr: false });
@@ -14,19 +16,21 @@ export default function Home() {
 
       {/* Simplified, resilient layout: fixed-height map wrapper to avoid 0px height issues */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 h-dvh w-full overflow-hidden p-6">
-  {/* Left collumn - map*/}
-  <div className="bg-gray-300 rounded-lg h-[90%] w-full overflow-hidden mb-20">
-    <Map />
-  </div>
+        {/* Left collumn - map*/}
+        <div className="bg-gray-300 rounded-lg h-[90%] w-full overflow-hidden mb-20">
+          <Map />
+        </div>
 
-  {/* right collumn - scrolling list */}
-  <div className="flex flex-col gap-6 h-[90%] w-full mb-20 overflow-y-auto scrollbar-hide pr-2">
-    <div className="bg-gray-300 rounded-lg h-3/5 shrink-0"></div>
-    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
-    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
-    <div className="bg-gray-300 rounded-lg h-1/5 shrink-0"></div>
-  </div>
-</section>
+        {/* right collumn - scrolling list */}
+        <div className="flex flex-col gap-6 h-[90%] w-full mb-20 overflow-y-auto scrollbar-hide pr-2">
+          <div className="bg-gray-300 rounded-lg h-2/4 overflow-y-auto scrollbar-hide shrink-0">
+            <AddEventForm />
+          </div>
+          <div className="bg-gray-300 rounded-lg shrink-0">
+            <EventsList />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
