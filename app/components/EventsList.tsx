@@ -31,17 +31,26 @@ export default function EventsList() {
       ) : (
         <ul>
           {events.map((event) => (
-            <div key={event.id} className="p-4 border-gray-400 m-1 bg-gray-50 rounded-lg shadow-2xl-sm">
-                <p className="text-xl text-gray-900">{event.title}</p>
-                <p className="text-sm text-gray-600">{event.description}</p>
-                <p className="text-xs text-gray-600">
-                    📍 {event.latitude}, {event.longitude}
-                </p>
-                <p className="text-xs text-gray-600">
-                    🗓️ {new Date(event.eventDate).toLocaleString()}
-                </p>
+            <div
+              key={event.id}
+              className="p-4 border-gray-400 m-1 bg-gray-50 rounded-lg shadow-2xl-sm"
+            >
+              <p className="text-xl text-gray-900">{event.title}</p>
+              <p className="text-sm text-gray-600">{event.description}</p>
+              <p className="text-xs text-gray-600">
+                📍 {event.latitude}, {event.longitude}
+              </p>
+              <p className="text-xs text-gray-600">
+                🗓️{" "}
+                {new Date(event.eventDate).toLocaleString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </div>
-
           ))}
         </ul>
       )}
