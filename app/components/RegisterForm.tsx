@@ -18,12 +18,12 @@ export default function RegisterForm() {
   const [statusMsg, setStatusMsg] = useState(""); // message text
   const [statusType, setStatusType] = useState(""); // "success" | "error"
 
-  const handleChange = (e) => {
+  const handleChange = (e : any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e : any) => {
     e.preventDefault();
     // Handle form submission
     try {

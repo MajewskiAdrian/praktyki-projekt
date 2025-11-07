@@ -9,42 +9,71 @@ export default function AddEventForm() {
     latitude: "",
     longitude: "",
     eventDate: "",
+    eventTime: "", // <- added to keep input controlled
     maxAttendees: "",
-    creatorId: "",
   });
 
-  function handleChange(e) {
+  function handleChange(e : any) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e : any) {
     e.preventDefault();
-    try {
-      // Build payload mapping local keys to API expectations
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        latitude: formData.latitude,
-        longitude: formData.longitude,
-        eventDate: formData.eventDate + " " + formData.eventTime,
-        maxAttendees: formData.maxAttendees,
-        creatorId: formData.creatorId,
-      };
 
+    // client-side validation and type normalization
+    const {
+      title,
+      description,
+      latitude,
+      longitude,
+      eventDate,
+      eventTime,
+      maxAttendees,
+    } = formData;
+    if (!title || !description || !latitude || !longitude || !eventDate || !eventTime) {
+      console.error("Wypełnij wszystkie wymagane pola");
+      return;
+    }
+
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      console.error("Szerokość/długość muszą być liczbami");
+      return;
+    }
+
+    // build ISO date-time safely (treat input as local date+time)
+    const dateTime = new Date(`${eventDate}T${eventTime}`);
+    if (Number.isNaN(dateTime.getTime())) {
+      console.error("Nieprawidłowa data/godzina");
+      return;
+    }
+    const eventDateIso = dateTime.toISOString();
+
+    const payload = {
+      title,
+      description,
+      latitude: lat,
+      longitude: lng,
+      eventDate: eventDateIso,
+      maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : null,
+    };
+
+    try {
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || "Błąd przy dodawaniu wydarzenia");
+        console.error("Błąd przy dodawaniu wydarzenia:", body?.error || res.statusText);
+        return;
       }
 
-      const data = await res.json();
-      console.log("Nowy event zapisany:", data);
+      console.log("Nowy event zapisany:", body);
 
       // Reset while preserving the same keys (keep controlled inputs)
       setFormData({
@@ -53,8 +82,8 @@ export default function AddEventForm() {
         latitude: "",
         longitude: "",
         eventDate: "",
+        eventTime: "",
         maxAttendees: "",
-        creatorId: "",
       });
     } catch (err) {
       console.error(err);
@@ -74,6 +103,7 @@ export default function AddEventForm() {
         value={formData.title}
         onChange={handleChange}
         name="title"
+        required
       />
 
       <label htmlFor="description">Opis:</label>
@@ -83,13 +113,15 @@ export default function AddEventForm() {
         value={formData.description}
         onChange={handleChange}
         name="description"
+        required
       />
+
       <div className="grid-cols-4 grid gap-2 grid-rows-2">
         <label htmlFor="latitude">Szerokość geograficzna:</label>
         <input
           className="bg-gray-200"
           id="latitude"
-          type="text"
+          type="number"
           step="any"
           value={formData.latitude}
           onChange={handleChange}
@@ -101,7 +133,7 @@ export default function AddEventForm() {
         <input
           className="bg-gray-200"
           id="longitude"
-          type="text"
+          type="number"
           step="any"
           value={formData.longitude}
           onChange={handleChange}
@@ -119,6 +151,7 @@ export default function AddEventForm() {
           name="eventDate"
           required
         />
+
         <label htmlFor="eventTime">Godzina:</label>
         <input
           className="bg-gray-200"
@@ -130,6 +163,7 @@ export default function AddEventForm() {
           required
         />
       </div>
+
       <label htmlFor="maxAttendees">Maksymalna liczba uczestników:</label>
       <input
         className="bg-gray-200"
@@ -139,17 +173,6 @@ export default function AddEventForm() {
         value={formData.maxAttendees}
         onChange={handleChange}
         name="maxAttendees"
-      />
-
-      <label htmlFor="creatorId">Id twórcy (uuid):</label>
-      <input
-        className="bg-gray-200"
-        id="creatorId"
-        type="text"
-        value={formData.creatorId}
-        onChange={handleChange}
-        name="creatorId"
-        required
       />
 
       <button type="submit" className="bg-gray-200">

@@ -16,12 +16,12 @@ export default function LoginForm() {
   const [statusType, setStatusType] = useState(""); // "success" || "error"
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e : any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e : any) => {
     e.preventDefault();
     setIsSubmitting(true);
     setStatusMsg("");
@@ -56,7 +56,7 @@ export default function LoginForm() {
       setStatusMsg("Login successful!");
       console.log("User logged in:", user);
       router.push('/');
-    } catch (error) {
+    } catch (error : any) {
       console.error(error);
       setStatusType("error");
       setStatusMsg(error.message || "An error occurred during login");
