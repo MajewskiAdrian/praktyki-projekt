@@ -24,7 +24,6 @@ export default function Home() {
         {/* right collumn - scrolling list */}
         <div className="flex flex-col gap-6 h-[90%] w-full mb-20 overflow-y-auto scrollbar-hide pr-2">
           <div className="bg-gray-300 rounded-lg h-2/4 overflow-y-auto scrollbar-hide shrink-0">
-            <AddEventForm />
           </div>
           <div className="bg-gray-300 rounded-lg shrink-0">
             <EventsList />
