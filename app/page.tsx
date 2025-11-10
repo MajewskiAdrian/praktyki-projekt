@@ -2,6 +2,8 @@
 import dynamic from "next/dynamic";
 import EventsList from "./components/EventsList";
 import AddEventForm from "./components/AddEventForm";
+import { Circle } from "react-leaflet";
+import CircleMenu from "./components/CircleMenu";
 
 // import of component with leaflet map, client-side only
 const Map = dynamic(() => import("./components/Map"), { ssr: false });
@@ -10,8 +12,9 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100">
       <header className="bg-gray-300 flex justify-between items-center px-6 py-4 mb-6 rounded-b-sm">
-        <div className="text-black font-semibold m-0">Nazwa</div>
-        <div className="w-10 h-10 bg-gray-400 rounded-full"></div>
+        <div className="text-black font-semibold m-0">Venn</div>
+        
+        <CircleMenu />
       </header>
 
       {/* Simplified, resilient layout: fixed-height map wrapper to avoid 0px height issues */}

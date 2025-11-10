@@ -4,25 +4,36 @@ import jwt from "jsonwebtoken";
 
 // Pobieranie wszystkich eventów
 export async function GET() {
-  const events = await prisma.event.findMany();
-  return NextResponse.json(events);
+  try {
+    const events = await prisma.event.findMany();
+    return NextResponse.json(events);
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    return NextResponse.json(
+      { error: "Server error fetching events" },
+      { status: 500 }
+    );
+  }
 }
 
 // Tworzenie nowego eventu -- walidacja i normalizacja danych
 export async function POST(req: Request) {
   const body = await req.json();
 
-   // prosta walidacja i czytelny komunikat (tymczasowe)
-   const missing = [];
-   if (!body.title) missing.push("title");
-   if (!body.description) missing.push("description");
-   if (body.latitude == null) missing.push("latitude");
-   if (body.longitude == null) missing.push("longitude");
-   if (!body.eventDate) missing.push("eventDate");
-   if (missing.length) {
-     console.error("Validation failed, missing fields:", missing);
-     return NextResponse.json({ error: "Missing or invalid fields", fields: missing }, { status: 400 });
-   }
+  // prosta walidacja i czytelny komunikat (tymczasowe)
+  const missing = [];
+  if (!body.title) missing.push("title");
+  if (!body.description) missing.push("description");
+  if (body.latitude == null) missing.push("latitude");
+  if (body.longitude == null) missing.push("longitude");
+  if (!body.eventDate) missing.push("eventDate");
+  if (missing.length) {
+    console.error("Validation failed, missing fields:", missing);
+    return NextResponse.json(
+      { error: "Missing or invalid fields", fields: missing },
+      { status: 400 }
+    );
+  }
 
   try {
     const titleRaw: any = body.title;
@@ -65,7 +76,9 @@ export async function POST(req: Request) {
 
     // Pobierz token z ciasteczka w bezpieczny sposób
     const cookieHeader = req.headers.get("cookie") || "";
-    const tokenCookie = cookieHeader.split("; ").find((c) => c.startsWith("token="));
+    const tokenCookie = cookieHeader
+      .split("; ")
+      .find((c) => c.startsWith("token="));
     const tokenValue = tokenCookie ? tokenCookie.split("=")[1] : null;
     const secret = process.env.JWT_SECRET;
 

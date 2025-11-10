@@ -2,31 +2,35 @@
 import { useState } from "react";
 
 export default function LogoutButton() {
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    const handleLogout = async () => {
-        setIsLoggingOut(true)
-        const res = await fetch ("/api/logout", {
-            method: "POST",
-        })
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const res = await fetch("/api/logout", { method: "POST" });
 
-        if (!res) {
-            console.error("Logout failed")
-            setIsLoggingOut(false)
-        } else {
-            // do dodania później, gdy będzie strona główna
-            // window.location.href = "/";
-            setIsLoggingOut(false)
-        }
+      if (!res.ok) {
+        console.error("Logout failed");
+        setIsLoggingOut(false);
+        return;
+      }
+
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error during logout:", error);
+      setIsLoggingOut(false);
     }
+  };
 
-    return (
-        <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="px-4 py-2 bg-gray-500 text-gray-50 rounded hover:bg-gray-600 disabled:opacity-50 ease-in-out duration-300"
-        >
-            {isLoggingOut ? "Logging out..." : "Logout"}
-        </button>
-    );
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      disabled={isLoggingOut}
+      className="w-full text-left px-3 py-1 bg-transparent text-gray-50 cursor-pointer rounded disabled:opacity-50 focus:outline-none ease-in-out duration-300"
+      aria-disabled={isLoggingOut}
+    >
+      {isLoggingOut ? "Logging out..." : "Logout"}
+    </button>
+  );
 }
