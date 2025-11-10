@@ -116,7 +116,7 @@ export default function AddEventForm({
 
   return (
     <form
-      className="flex flex-col gap-3 bg-gray-300 p-4 rounded-lg text-gray-950 w-[360px] max-w-[90vw]"
+      className="flex flex-col gap-3 bg-gray-300 p-4 rounded-lg text-gray-950 w-[300px] max-w-[90vw]"
       onSubmit={handleSubmit}
     >
       <label htmlFor="title">Tytuł:</label>
