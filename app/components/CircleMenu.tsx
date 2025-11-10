@@ -1,5 +1,7 @@
 "use client";
+
 import { useState } from "react";
+import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 
 export default function CircleMenu() {
@@ -18,10 +20,16 @@ export default function CircleMenu() {
         <div className="absolute top-0 right-12 bg-gray-500 rounded-lg shadow-lg p-2 w-50">
           <ul className="space-y-1">
             <li className="hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out">
-              Account settings
+              Account
             </li>
-            <li className="hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out">
-              Settings
+            <li>
+              <Link
+                href="/settings"
+                className="block hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out"
+                onClick={() => setOpen(false)} // opcjonalnie zamknij menu po kliknięciu
+              >
+                Settings
+              </Link>
             </li>
             <li className="hover:bg-red-600 px-0 py-0 rounded transition-colors duration-500 ease-in-out">
               <LogoutButton />
