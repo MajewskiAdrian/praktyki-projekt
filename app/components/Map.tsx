@@ -1,6 +1,6 @@
 "use client";
 import "leaflet/dist/leaflet.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -57,23 +57,35 @@ function ResizeRevalidator() {
   return null;
 }
 
-export default function Map() {
+export default function Map({ onEventAdded }: { onEventAdded?: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
     null
   );
+  const markerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Załaduj eventy po zamontowaniu
-  useEffect(() => {
-    // Pobierz eventy z API
+  // Function to load events - DON'T call onEventAdded here
+  const loadEvents = () => {
     fetch("/api/events")
       .then((res) => res.json())
-      .then((data) => setEvents(data));
+      .then((data) => setEvents(data))
+      .catch((err) => console.error("Failed to load events:", err));
+  };
+
+  // Wrapper function that loads events AND notifies parent - ONLY use this after adding event
+  const handleEventAdded = () => {
+    loadEvents();
+    if (onEventAdded) onEventAdded();
+  };
+
+  // Load events on mount
+  useEffect(() => {
+    loadEvents();
   }, []);
 
   // Komponent do obsługi kliknięć na mapie
@@ -91,6 +103,13 @@ export default function Map() {
 
     return null;
   }
+
+  // Otwórz popup po pojawieniu się markera
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.openPopup();
+    }
+  }, [markerPosition]);
 
   if (!mounted) return <div className="w-full h-full rounded-lg z-0" />;
 
@@ -119,9 +138,22 @@ export default function Map() {
       />
       {/* Marker wybranego miejsca */}
       {markerPosition && (
-        <Marker position={markerPosition}>
-          <Popup>
-            <AddEventForm lat={markerPosition[0]} lng={markerPosition[1]} />
+        <Marker
+          position={markerPosition}
+          ref={markerRef}
+          eventHandlers={{
+            add: (e) => {
+              // Otwórz popup natychmiast po dodaniu markera do mapy
+              e.target.openPopup();
+            },
+          }}
+        >
+          <Popup autoClose={false}>
+            <AddEventForm
+              lat={markerPosition[0]}
+              lng={markerPosition[1]}
+              onEventAdded={handleEventAdded}
+            />
           </Popup>
         </Marker>
       )}

@@ -16,17 +16,12 @@ export default function Settings() {
   const [active, setActive] = useState<string>("profile");
 
   return (
-    <div className="h-full bg-white rounded-lg shadow-md overflow-hidden flex">
+    <div className="h-screen bg-white shadow-md overflow-hidden flex mb-10 dark:bg-gray-800">
       {/* Sidebar */}
-      <Link
-  href="/"
-  className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition"
->
-  ← Powrót
-</Link>
-      <aside className="w-64 border-r bg-gray-50 p-4 hidden sm:block">
+      
+      <aside className="w-64 border-r bg-gray-50 p-4 sm:block flex flex-col">
         <h3 className="text-black font-semibold mb-4">Settings</h3>
-        <nav className="space-y-1">
+        <nav className="space-y-1 flex-1">
           {Nav.map((item) => (
             <button
               key={item.id}
@@ -40,6 +35,12 @@ export default function Settings() {
             </button>
           ))}
         </nav>
+        <Link
+          href="/"
+          className="block mt-4 px-3 py-1.5 rounded-lg w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center"
+        >
+          ← Return
+        </Link>
       </aside>
 
       {/* Content */}

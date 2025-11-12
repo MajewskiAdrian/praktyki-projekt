@@ -1,13 +1,17 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AddEventForm({
   lat,
   lng,
+  onEventAdded,
 }: {
   lat?: number;
   lng?: number;
+  onEventAdded?: () => void;
 }) {
+  const router = useRouter();
   // Jeden stan — całe formData (wszystkie pola kontrolowane)
   const [formData, setFormData] = useState({
     title: "",
@@ -57,20 +61,20 @@ export default function AddEventForm({
     } = formData;
 
     if (!title || !description || !latitude || !longitude || !eventDate || !eventTime) {
-      console.error("Wypełnij wszystkie wymagane pola");
+      console.error("Please fill in all required fields");
       return;
     }
 
     const latNum = parseFloat(latitude);
     const lngNum = parseFloat(longitude);
     if (Number.isNaN(latNum) || Number.isNaN(lngNum)) {
-      console.error("Szerokość/długość muszą być liczbami");
+      console.error("Longtitude and Latitude must be valid numbers");
       return;
     }
 
     const dateTime = new Date(`${eventDate}T${eventTime}`);
     if (Number.isNaN(dateTime.getTime())) {
-      console.error("Nieprawidłowa data/godzina");
+      console.error("Wrong date or time format");
       return;
     }
     const eventDateIso = dateTime.toISOString();
@@ -93,11 +97,15 @@ export default function AddEventForm({
 
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        console.error("Błąd przy dodawaniu wydarzenia:", body?.error || res.statusText);
+        console.error("An error occurred while adding the event:", body?.error || res.statusText);
         return;
       }
 
-      console.log("Nowy event zapisany:", body);
+      console.log("New event added:", body);
+
+      if (onEventAdded) {
+        onEventAdded();
+      }
 
       // Zresetuj formularz, ale zachowaj najnowsze współrzędne (z propów)
       setFormData({

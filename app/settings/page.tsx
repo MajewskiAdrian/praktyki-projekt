@@ -5,7 +5,7 @@ import Settings from "../components/Settings/Settings";
 
 export default function SettingsPage() {
   return (
-    <div className="p-6">
+    <div className="">
       <Settings />
     </div>
   );

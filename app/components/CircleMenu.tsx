@@ -19,14 +19,20 @@ export default function CircleMenu() {
       {open && (
         <div className="absolute top-0 right-12 bg-gray-500 rounded-lg shadow-lg p-2 w-50">
           <ul className="space-y-1">
-            <li className="hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out">
+            <li>
+              <Link
+                href="/dashboard"
+                className="block hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out"
+                onClick={() => setOpen(false)}
+            >
               Account
+            </Link>
             </li>
             <li>
               <Link
                 href="/settings"
                 className="block hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out"
-                onClick={() => setOpen(false)} // opcjonalnie zamknij menu po kliknięciu
+                onClick={() => setOpen(false)} // zamknij menu po kliknięciu
               >
                 Settings
               </Link>
