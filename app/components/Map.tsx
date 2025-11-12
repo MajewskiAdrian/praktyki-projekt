@@ -71,22 +71,22 @@ export default function Map({ onEventAdded }: { onEventAdded?: () => void }) {
 
   // Function to load events - DON'T call onEventAdded here
   const loadEvents = () => {
-  fetch("/api/events")
-    .then((res) => res.json())
-    .then((data) => {
-      // Upewnij się, że to tablica:
-      if (Array.isArray(data)) {
-        setEvents(data);
-      } else if (Array.isArray(data.events)) {
-        setEvents(data.events);
-      } else {
-        console.error("Unexpected events data format:", data);
-        setEvents([]); 
-      }
-    })
-    .catch((err) => console.error("Failed to load events:", err));
-};
-
+    fetch("/api/events")
+      .then((res) => res.json())
+      .then((data) => {
+        // Upewnij się, że to tablica:
+        if (Array.isArray(data)) {
+          setEvents(data);
+        } else if (Array.isArray(data.events)) {
+          setEvents(data.events);
+        } else {
+          console.warn("Unexpected events data format:", data);
+          // nie nadpisuj events — zostaw poprzednie dane
+          return;
+        }
+      })
+      .catch((err) => console.error("Failed to load events:", err));
+  };
 
   // Wrapper function that loads events AND notifies parent - ONLY use this after adding event
   const handleEventAdded = () => {

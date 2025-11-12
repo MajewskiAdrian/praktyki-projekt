@@ -1,20 +1,24 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma"; // relative import to root /lib/prisma.ts
+import { prisma } from "@/lib/prisma"; // relative import to root /lib/prisma.ts
 import jwt from "jsonwebtoken";
 
 // Pobieranie wszystkich eventów
 export async function GET() {
   try {
+    console.log("📡 /api/events GET called");
     const events = await prisma.event.findMany();
+    console.log("✅ Found events:", events.length);
     return NextResponse.json(events);
   } catch (err) {
-    console.error("Error fetching events:", err);
+    console.error("❌ Error fetching events:", err);
     return NextResponse.json(
-      { error: "Server error fetching events" },
+      { error: "Server error fetching events", details: String(err) },
       { status: 500 }
     );
   }
 }
+
+
 
 // Tworzenie nowego eventu -- walidacja i normalizacja danych
 export async function POST(req: Request) {

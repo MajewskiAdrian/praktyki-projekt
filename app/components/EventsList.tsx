@@ -28,17 +28,17 @@ export default function EventsList() {
   if (loading) return <p>Loading events...</p>;
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full overflow-auto scrollbar-hide">
      {selectedEvent ? (
-      <EventData 
-        event={selectedEvent} 
-        onClose={() => setSelectedEvent(null)} 
-      />
-    ) : (
-        <div className="h-full overflow-auto">
+       <EventData 
+         event={selectedEvent} 
+         onClose={() => setSelectedEvent(null)} 
+       />
+     ) : (
+        <div>
           <h2 className="text-2xl font-bold mb-4 text-black dark:text-white p-4">
-            Upcoming Events
-          </h2>
+             Upcoming Events
+           </h2>
           
           {events.length === 0 ? (
             <p className="p-4">No events found.</p>
@@ -76,7 +76,7 @@ export default function EventsList() {
             </ul>
           )}
         </div>
-      )}
-    </div>
-  );
+       )}
+     </div>
+   );
 }

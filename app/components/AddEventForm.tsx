@@ -127,7 +127,7 @@ export default function AddEventForm({
       className="flex flex-col gap-3 bg-gray-300 p-4 rounded-lg text-gray-950 w-[300px] max-w-[90vw]"
       onSubmit={handleSubmit}
     >
-      <label htmlFor="title">Tytuł:</label>
+      <label htmlFor="title">Title:</label>
       <input
         className="bg-gray-200 p-2 rounded"
         id="title"
@@ -138,8 +138,9 @@ export default function AddEventForm({
         required
       />
 
-      <label htmlFor="description">Opis:</label>
+      <label htmlFor="description">Description:</label>
       <textarea
+        style={{ height: 80, maxHeight: 120, minHeight: 80 }}
         className="bg-gray-200 p-2 rounded"
         id="description"
         value={formData.description}
@@ -149,36 +150,9 @@ export default function AddEventForm({
       />
 
       <div className="grid grid-cols-2 gap-2">
-        {/* <div>
-          <label htmlFor="latitude">Szerokość geograficzna:</label>
-          <input
-            className="bg-gray-200 p-2 rounded w-full"
-            id="latitude"
-            type="number"
-            step="any"
-            value={formData.latitude}
-            onChange={handleChange}
-            name="latitude"
-            required
-          />
-        </div>
 
         <div>
-          <label htmlFor="longitude">Długość geograficzna:</label>
-          <input
-            className="bg-gray-200 p-2 rounded w-full"
-            id="longitude"
-            type="number"
-            step="any"
-            value={formData.longitude}
-            onChange={handleChange}
-            name="longitude"
-            required
-          />
-        </div> */}
-
-        <div>
-          <label htmlFor="eventDate">Data:</label>
+          <label htmlFor="eventDate">Date:</label>
           <input
             className="bg-gray-200 p-2 rounded w-full"
             id="eventDate"
@@ -191,7 +165,7 @@ export default function AddEventForm({
         </div>
 
         <div>
-          <label htmlFor="eventTime">Godzina:</label>
+          <label htmlFor="eventTime">Time:</label>
           <input
             className="bg-gray-200 p-2 rounded w-full"
             id="eventTime"
@@ -204,7 +178,7 @@ export default function AddEventForm({
         </div>
       </div>
 
-      <label htmlFor="maxAttendees">Maksymalna liczba uczestników:</label>
+      <label htmlFor="maxAttendees">Max attendees:</label>
       <input
         className="bg-gray-200 p-2 rounded"
         id="maxAttendees"
@@ -213,10 +187,11 @@ export default function AddEventForm({
         value={formData.maxAttendees}
         onChange={handleChange}
         name="maxAttendees"
+        required
       />
 
       <button type="submit" className="bg-blue-600 text-white p-2 rounded">
-        Dodaj
+        Add
       </button>
     </form>
   );

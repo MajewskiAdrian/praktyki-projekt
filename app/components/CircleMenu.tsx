@@ -17,12 +17,12 @@ export default function CircleMenu() {
 
       {/* Lista opcji (pokazuje się tylko, gdy open === true) */}
       {open && (
-        <div className="absolute top-0 right-12 bg-gray-500 rounded-lg shadow-lg p-2 w-50">
+        <div className="absolute top-0 z-1000 right-12 bg-gray-500 rounded-lg shadow-lg p-2 w-50">
           <ul className="space-y-1">
             <li>
               <Link
                 href="/dashboard"
-                className="block hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out"
+                className="block hover:bg-gray-100 hover:text-gray-900 px-3 py-1 text-gray-50 rounded cursor-pointer transition-colors duration-500 ease-in-out"
                 onClick={() => setOpen(false)}
             >
               Account
@@ -31,13 +31,13 @@ export default function CircleMenu() {
             <li>
               <Link
                 href="/settings"
-                className="block hover:bg-gray-100 px-3 py-1 rounded cursor-pointer transition-colors duration-500 ease-in-out"
+                className="block hover:bg-gray-100 hover:text-gray-900 px-3 py-1 text-gray-50 rounded cursor-pointer transition-colors duration-500 ease-in-out"
                 onClick={() => setOpen(false)} // zamknij menu po kliknięciu
               >
                 Settings
               </Link>
             </li>
-            <li className="hover:bg-red-600 px-0 py-0 rounded transition-colors duration-500 ease-in-out">
+            <li className="hover:bg-red-600 px-0 py-0 text-gray-50 rounded transition-colors duration-500 ease-in-out">
               <LogoutButton />
             </li>
           </ul>
