@@ -10,13 +10,13 @@ export async function GET(req: NextRequest) {
     const decoded = verifyToken(token);
     if (!decoded?.id) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
-    const userEvents = await prisma.event.findMany({
+    const createdEvents = await prisma.event.findMany({
       where: { creatorId: decoded.id },
     });
 
-    if (!userEvents) return NextResponse.json({ error: "Events created by user not found" }, { status: 404 });
+    if (!createdEvents) return NextResponse.json({ error: "Events created by user not found" }, { status: 404 });
 
-    return NextResponse.json({ userEvents });
+    return NextResponse.json({ createdEvents }, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

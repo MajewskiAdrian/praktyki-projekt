@@ -11,6 +11,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import AddEventForm from "./AddEventForm";
+import JoinEventButton from "./JoinEventButton";
 
 // poprawa błędu z domyślną ikoną Leaflet w Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -187,6 +188,7 @@ export default function Map({ onEventAdded }: { onEventAdded?: () => void }) {
                   minute: "2-digit",
                 })}
             </small>
+            <JoinEventButton eventId={event.id} />
           </Popup>
         </Marker>
       ))}

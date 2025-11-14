@@ -7,6 +7,7 @@ export default function EventsList() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Dodaj
 
   useEffect(() => {
     async function loadEvents() {
@@ -32,7 +33,10 @@ export default function EventsList() {
      {selectedEvent ? (
        <EventData 
          event={selectedEvent} 
-         onClose={() => setSelectedEvent(null)} 
+         onClose={() => {
+           setSelectedEvent(null);
+           setRefreshTrigger(prev => prev + 1); // Wymuszaj odświeżenie listy
+         }} 
        />
      ) : (
         <div>

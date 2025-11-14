@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import JoinEventButton from "./JoinEventButton";
+import EventAttendees from "./EventAttendees";
 
 export default function EventData({
   event,
@@ -57,8 +58,14 @@ export default function EventData({
               })}
             </p>
           </div>
+          <div>
+            <EventAttendees eventId={String(event.id)} />
+          </div> 
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-            <JoinEventButton eventId={event.id} />
+            <JoinEventButton 
+              key={event.id} // Upewnij się że key jest ustawiony
+              eventId={event.id} 
+            />
           </div>
         </div>
       </div>
