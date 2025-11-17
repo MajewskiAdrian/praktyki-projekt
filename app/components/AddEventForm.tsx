@@ -1,197 +1,162 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import EventTags from "./EventTags";
 
 export default function AddEventForm({
   lat,
   lng,
   onEventAdded,
 }: {
-  lat?: number;
-  lng?: number;
+  lat: number;
+  lng: number;
   onEventAdded?: () => void;
 }) {
-  const router = useRouter();
-  // Jeden stan — całe formData (wszystkie pola kontrolowane)
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    latitude: lat !== undefined ? String(lat) : "",
-    longitude: lng !== undefined ? String(lng) : "",
-    eventDate: "",
-    eventTime: "",
-    maxAttendees: "",
-  });
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [maxAttendees, setMaxAttendees] = useState("");
+  //const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Synchronizujemy formData z propami lat/lng gdy one się zmienią.
-  // Robimy to *tylko* jeśli prop naprawdę się różni od wartości w formData,
-  // żeby nie nadpisać tego co użytkownik już zaczął wpisywać.
-  useEffect(() => {
-    setFormData((prev) => {
-      const next = { ...prev };
-      const latStr = lat !== undefined ? String(lat) : "";
-      const lngStr = lng !== undefined ? String(lng) : "";
-
-      // jeśli różni się od aktualnego -> podmień
-      if (latStr !== prev.latitude || lngStr !== prev.longitude) {
-        next.latitude = latStr;
-        next.longitude = lngStr;
-        return next;
-      }
-      return prev;
-    });
-  }, [lat, lng]);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const {
-      title,
-      description,
-      latitude,
-      longitude,
-      eventDate,
-      eventTime,
-      maxAttendees,
-    } = formData;
-
-    if (!title || !description || !latitude || !longitude || !eventDate || !eventTime) {
-      console.error("Please fill in all required fields");
-      return;
-    }
-
-    const latNum = parseFloat(latitude);
-    const lngNum = parseFloat(longitude);
-    if (Number.isNaN(latNum) || Number.isNaN(lngNum)) {
-      console.error("Longtitude and Latitude must be valid numbers");
-      return;
-    }
-
-    const dateTime = new Date(`${eventDate}T${eventTime}`);
-    if (Number.isNaN(dateTime.getTime())) {
-      console.error("Wrong date or time format");
-      return;
-    }
-    const eventDateIso = dateTime.toISOString();
-
-    const payload = {
-      title,
-      description,
-      latitude: latNum,
-      longitude: lngNum,
-      eventDate: eventDateIso,
-      maxAttendees: maxAttendees ? parseInt(maxAttendees, 10) : null,
-    };
+    setLoading(true);
+    setError("");
 
     try {
-      const res = await fetch("/api/events", {
+      console.log("📤 Sending data:", {
+        title,
+        description,
+        latitude: lat,
+        longitude: lng,
+        eventDate,
+        maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
+        //tagIds: selectedTags, // WAŻNE: sprawdź czy to jest wysyłane
+      });
+
+      const response = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        credentials: "include",
+        body: JSON.stringify({
+          title,
+          description,
+          latitude: lat,
+          longitude: lng,
+          eventDate,
+          maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
+          //tagIds: selectedTags, // Przekaż wybrane tagi
+        }),
       });
 
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        console.error("An error occurred while adding the event:", body?.error || res.statusText);
-        return;
-      }
+      if (!response.ok) {
+  const body = await response.text(); // ✔️ odczyt JEDEN raz
 
-      console.log("New event added:", body);
+  let errorMessage = "Failed to create event";
 
-      if (onEventAdded) {
-        onEventAdded();
-      }
-
-      // Zresetuj formularz, ale zachowaj najnowsze współrzędne (z propów)
-      setFormData({
-        title: "",
-        description: "",
-        latitude: lat !== undefined ? String(lat) : "",
-        longitude: lng !== undefined ? String(lng) : "",
-        eventDate: "",
-        eventTime: "",
-        maxAttendees: "",
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  try {
+    const json = JSON.parse(body);
+    errorMessage = json.error || errorMessage;
+  } catch {
+    // Jeśli to nie jest JSON, body zostaje jako tekst
+    errorMessage = body || `Server error: ${response.status}`;
   }
 
+  throw new Error(errorMessage);
+}
+
+
+      const data = await response.json();
+      console.log("✅ Event created:", data);
+
+      // Reset formularza
+      setTitle("");
+      setDescription("");
+      setEventDate("");
+      setMaxAttendees("");
+      //setSelectedTags([]);
+
+      if (onEventAdded) onEventAdded();
+    } catch (err: any) {
+      console.error("❌ Error creating event:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <form
-      className="flex flex-col gap-3 bg-gray-300 p-4 rounded-lg text-gray-950 w-[300px] max-w-[90vw]"
-      onSubmit={handleSubmit}
-    >
-      <label htmlFor="title">Title:</label>
-      <input
-        className="bg-gray-200 p-2 rounded"
-        id="title"
-        type="text"
-        value={formData.title}
-        onChange={handleChange}
-        name="title"
-        required
-      />
-
-      <label htmlFor="description">Description:</label>
-      <textarea
-        style={{ height: 80, maxHeight: 120, minHeight: 80 }}
-        className="bg-gray-200 p-2 rounded"
-        id="description"
-        value={formData.description}
-        onChange={handleChange}
-        name="description"
-        required
-      />
-
-      <div className="grid grid-cols-2 gap-2">
-
-        <div>
-          <label htmlFor="eventDate">Date:</label>
-          <input
-            className="bg-gray-200 p-2 rounded w-full"
-            id="eventDate"
-            type="date"
-            value={formData.eventDate}
-            onChange={handleChange}
-            name="eventDate"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="eventTime">Time:</label>
-          <input
-            className="bg-gray-200 p-2 rounded w-full"
-            id="eventTime"
-            type="time"
-            value={formData.eventTime}
-            onChange={handleChange}
-            name="eventTime"
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Title
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
-      <label htmlFor="maxAttendees">Max attendees:</label>
-      <input
-        className="bg-gray-200 p-2 rounded"
-        id="maxAttendees"
-        type="number"
-        min="0"
-        value={formData.maxAttendees}
-        onChange={handleChange}
-        name="maxAttendees"
-        required
-      />
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Description
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
-      <button type="submit" className="bg-blue-600 text-white p-2 rounded">
-        Add
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Date and Time
+        </label>
+        <input
+          type="datetime-local"
+          value={eventDate}
+          onChange={(e) => setEventDate(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Max Attendees (optional)
+        </label>
+        <input
+          type="number"
+          value={maxAttendees}
+          onChange={(e) => setMaxAttendees(e.target.value)}
+          min="1"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Tags
+        </label>
+        {/*<EventTags selectedTags={selectedTags} onChange={setSelectedTags} />*/}
+      </div>
+
+      {error && (
+        <div className="text-red-500 text-sm">{error}</div>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+      >
+        {loading ? "Creating..." : "Create an event"}
       </button>
     </form>
   );

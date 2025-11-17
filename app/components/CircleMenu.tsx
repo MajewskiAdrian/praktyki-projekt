@@ -1,47 +1,61 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import LogoutButton from "./LogoutButton";
+import { useRouter } from "next/navigation";
 
 export default function CircleMenu() {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+
+  const handleNavigation = (path: string) => {
+    setIsOpen(false);
+    router.push(path);
+  };
+
+  const handleThemeChange = () => {
+    // Przeładuj stronę po zmianie motywu w settings
+    router.push('/settings');
+    router.refresh();
+  };
 
   return (
-    <div className="relative inline-block">
-      {/* Kółko */}
-      <div
-        onClick={() => setOpen(!open)}
-        className="w-10 h-10 bg-gray-500 rounded-full cursor-pointer hover:bg-gray-600"
-      ></div>
+    <div className="relative">
+      <button
+        onClick={toggleMenu}
+        className="w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center text-xl font-bold shadow-lg transition-all"
+      >
+        {isOpen ? "×" : "☰"}
+      </button>
 
-      {/* Lista opcji (pokazuje się tylko, gdy open === true) */}
-      {open && (
-        <div className="absolute top-0 z-1000 right-12 bg-gray-500 rounded-lg shadow-lg p-2 w-50">
-          <ul className="space-y-1">
-            <li>
-              <Link
-                href="/dashboard"
-                className="block hover:bg-gray-100 hover:text-gray-900 px-3 py-1 text-gray-50 rounded cursor-pointer transition-colors duration-500 ease-in-out"
-                onClick={() => setOpen(false)}
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-1000 overflow-hidden">
+            <button
+              onClick={() => handleNavigation("/dashboard")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 transition-colors"
             >
-              Account
-            </Link>
-            </li>
-            <li>
-              <Link
-                href="/settings"
-                className="block hover:bg-gray-100 hover:text-gray-900 px-3 py-1 text-gray-50 rounded cursor-pointer transition-colors duration-500 ease-in-out"
-                onClick={() => setOpen(false)} // zamknij menu po kliknięciu
-              >
-                Settings
-              </Link>
-            </li>
-            <li className="hover:bg-red-600 px-0 py-0 text-gray-50 rounded transition-colors duration-500 ease-in-out">
-              <LogoutButton />
-            </li>
-          </ul>
-        </div>
+              Dashboard
+            </button>
+            <button
+              onClick={handleThemeChange}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 transition-colors"
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => handleNavigation("/logout")}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 transition-colors border-t border-gray-200 dark:border-gray-700"
+            >
+              Logout
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

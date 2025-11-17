@@ -1,125 +1,67 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 interface JoinEventButtonProps {
   eventId: number;
+  initialIsJoined?: boolean;
+  onStatusChange?: (joined: boolean) => void;
 }
 
-export default function JoinEventButton({ eventId }: JoinEventButtonProps) {
-  const [loading, setLoading] = useState(false);
-  const [isJoined, setIsJoined] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const authHeaders = (): HeadersInit => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+export default function JoinEventButton({ 
+  eventId, 
+  initialIsJoined = false,
+  onStatusChange 
+}: JoinEventButtonProps) {
+  const [isJoined, setIsJoined] = useState(initialIsJoined);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("🔍 Checking join status for event:", eventId);
-    let cancelled = false;
+    console.log("🔵 JoinEventButton useEffect - initialIsJoined:", initialIsJoined);
+    setIsJoined(initialIsJoined);
+  }, [initialIsJoined]);
 
-    (async () => {
-      try {
-        const res = await fetch("/api/users/events/joined", {
-          cache: "no-store",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders(),
-          },
-        });
-
-
-
-        if (!res.ok) {
-          console.log("❌ Response not OK");
-          return;
-        }
-
-        let data: any = null;
-        try {
-          data = await res.json();
-        } catch (e) {
-          data = [];
-        }
-
-        const list = Array.isArray(data.joinedEvents) ? data.joinedEvents : [];
-
-        const joinedIds = list.map((e: any) => String(e.id ?? e.eventId));
-
-        const joined = joinedIds.includes(String(eventId));
-        
-        if (!cancelled) setIsJoined(joined);
-      } catch (error) {
-        
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [eventId]);
-
-  const handleJoin = async () => {
-    if (isJoined || loading) return;
-
-    setLoading(true);
-    setMessage("");
-
-    console.log("🚀 Attempting to join event:", eventId);
-
+  const handleJoinLeave = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/events/join", {
+      const endpoint = isJoined ? "/api/events/leave" : "/api/events/join";
+      console.log("📤 Calling:", endpoint, "for event:", eventId);
+      
+      const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders(),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventId }),
         credentials: "include",
       });
 
-      console.log("📡 Join response status:", res.status);
-
-      let body: any = {};
-      try {
-        body = await res.json();
-        console.log("📦 Join response body:", body);
-      } catch {
-        console.log("⚠️ No JSON body in response");
-      }
-
-      if (res.status === 401) {
-        setMessage("You must be logged in.");
-      } else if (!res.ok) {
-        setMessage(body?.error || "Failed to join");
+      if (response.ok) {
+        const newStatus = !isJoined;
+        console.log("✅ Success! New status:", newStatus);
+        setIsJoined(newStatus);
+        onStatusChange?.(newStatus);
       } else {
-        console.log("✅ Successfully joined!");
-        setIsJoined(true);
-        setMessage("Joined");
+        console.error("❌ Failed to update status:", await response.text());
       }
     } catch (error) {
-      console.error("❌ Error joining event:", error);
-      setMessage("Failed to join");
+      console.error("❌ Error:", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  console.log("🎨 Rendering button - isJoined:", isJoined);
+
   return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={handleJoin}
-        disabled={loading || isJoined}
-        className={`px-4 py-2 rounded text-white transition-colors ${isJoined
-            ? "bg-green-600 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400"
-          }`}
-      >
-        {isJoined ? "Joined" : loading ? "Joining..." : "Join Event"}
-      </button>
-    </div>
+    <button
+      onClick={handleJoinLeave}
+      disabled={isLoading}
+      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
+        isJoined
+          ? "bg-red-500 hover:bg-red-600 text-white"
+          : "bg-blue-500 hover:bg-blue-600 text-white"
+      }`}
+    >
+      {isLoading ? "Processing..." : isJoined ? "Leave Event" : "Join Event"}
+    </button>
   );
 }
 

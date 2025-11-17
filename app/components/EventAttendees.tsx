@@ -9,77 +9,23 @@ interface Attendee {
 
 interface EventAttendeesProps {
   eventId: string;
+  initialAttendees?: Attendee[];
+  onAttendeesUpdate?: (attendees: Attendee[]) => void;
 }
 
-export default function EventAttendees({ eventId }: EventAttendeesProps) {
-  const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function EventAttendees({ 
+  eventId, 
+  initialAttendees = [],
+  onAttendeesUpdate 
+}: EventAttendeesProps) {
+  const [attendees, setAttendees] = useState<Attendee[]>(initialAttendees);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Użyj initialAttendees i NIE pobieraj danych ponownie
   useEffect(() => {
-    console.log("🔍 Fetching attendees for event:", eventId);
-
-    // Anuluj poprzedni request jeśli istnieje
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    const fetchAttendees = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const res = await fetch(`/api/events/${eventId}/attendees`, {
-          cache: "no-store",
-          credentials: "include",
-          signal: abortController.signal, // Dodaj signal do anulowania
-        });
-
-        console.log("📡 Attendees response status:", res.status);
-
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error("❌ Error response:", errorText);
-          throw new Error(`Failed to fetch attendees: ${res.status}`);
-        }
-
-        const data = await res.json();
-        console.log("📦 Attendees data:", data);
-
-        // Sprawdź czy request nie został anulowany
-        if (!abortController.signal.aborted) {
-          setAttendees(Array.isArray(data.attendees) ? data.attendees : []);
-        }
-      } catch (err: any) {
-        // Ignoruj błąd abort - to normalne podczas czyszczenia
-        if (err.name === 'AbortError') {
-          console.log("⚠️ Request was cancelled");
-          return;
-        }
-        
-        console.error("❌ Error fetching attendees:", err);
-        if (!abortController.signal.aborted) {
-          setError("Failed to load attendees");
-          setAttendees([]);
-        }
-      } finally {
-        if (!abortController.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchAttendees();
-
-    // Cleanup function - anuluj request przy unmount
-    return () => {
-      abortController.abort();
-    };
-  }, [eventId]); // Tylko eventId w dependencies
+    setAttendees(initialAttendees);
+  }, [initialAttendees]);
 
   if (loading) {
     return (

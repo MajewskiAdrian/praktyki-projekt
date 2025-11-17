@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [createdEvents, setCreatedEvents] = useState<EventItem[] | null>(null);
   const [joinedEvents, setJoinedEvents] = useState<EventItem[] | null>(null);
+  const [locationNames, setLocationNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/users/profile")
@@ -54,6 +55,33 @@ export default function DashboardPage() {
       });
   }, []);
 
+  const fetchLocations = (events: EventItem[]) => {
+    events.forEach(event => {
+      if (locationNames[event.id]) return; // Don't re-fetch if already present
+
+      fetch(`/api/reverse-geocode?lat=${event.latitude}&lng=${event.longitude}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.label) {
+            setLocationNames(prev => ({ ...prev, [event.id]: data.label }));
+          }
+        })
+        .catch(err => console.error("Failed to fetch location:", err));
+    });
+  };
+
+  useEffect(() => {
+    if (createdEvents) {
+      fetchLocations(createdEvents);
+    }
+  }, [createdEvents]);
+
+  useEffect(() => {
+    if (joinedEvents) {
+      fetchLocations(joinedEvents);
+    }
+  }, [joinedEvents]);
+
 
   const renderEvents = (events: EventItem[], eventType: string) => {
     return events.map((event) => (
@@ -75,7 +103,7 @@ export default function DashboardPage() {
         </p>
         <p>Max attendees: {event.maxAttendees}</p>
         <p>
-          Location: {event.latitude}, {event.longitude}
+          Location: {locationNames[event.id] || `${event.latitude}, ${event.longitude}`}
         </p>
           {eventType === 'created' ? (<DeleteEventButton eventId={event.id} />) : <LeaveEventButton eventId={event.id} />}
       </div>

@@ -48,16 +48,16 @@ export default function DisplayPanel() {
 
   return (
     <section>
-      <h2 className="text-2xl font-semibold text-black mb-2">Display Settings</h2>
+      <h2 className="text-2xl font-semibold text-black mb-2 dark:text-gray-200">Display Settings</h2>
 
-      <div className="p-4 rounded-md border bg-white flex items-center justify-between">
+      <div className="p-4 rounded-md border bg-white flex items-center justify-between dark:border-gray-200 dark:bg-gray-700">
         <div>
-          <div className="font-medium text-black">Appearance</div>
-          <div className="text-sm text-gray-500">Toggle between light and dark mode.</div>
+          <div className="font-medium text-black dark:text-gray-200">Appearance</div>
+          <div className="text-sm text-gray-500 dark:text-gray-300">Toggle between light and dark mode.</div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">Light</span>
+          <span className="text-xs text-gray-500 dark:text-gray-300">Light</span>
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className={`relative inline-flex h-7 w-11 items-center rounded-full transition-colors ${
@@ -70,7 +70,7 @@ export default function DisplayPanel() {
               }`}
             />
           </button>
-          <span className="text-xs text-gray-500">Dark</span>
+          <span className="text-xs text-gray-500 dark:text-gray-300">Dark</span>
         </div>
       </div>
 
