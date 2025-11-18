@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import LogoutButton from "./LogoutButton";
 
 export default function CircleMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,12 +49,9 @@ export default function CircleMenu() {
             >
               Settings
             </button>
-            <button
-              onClick={() => handleNavigation("/logout")}
-              className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 transition-colors border-t border-gray-200 dark:border-gray-700"
-            >
-              Logout
-            </button>
+            <li className="w-full text-left px-4 py-3 text-red-600 hover:text-gray-50 hover:bg-red-500  dark:hover:bg-gray-700 dark:text-gray-200 transition-colors">
+              <LogoutButton />
+            </li>
           </div>
         </>
       )}

@@ -20,11 +20,22 @@ export default function EventsList({ onEventClick }: EventsListProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
-    fetch("/api/events")
-      .then((res) => res.json())
-      .then((data) => setEvents(data))
-      .catch((err) => console.error(err));
-  }, []);
+  fetch("/api/events")
+    .then((res) => res.json())
+    .then((data) => {
+      if (Array.isArray(data)) {
+        setEvents(data);
+      } else {
+        console.error("Unexpected events data format:", data);
+        setEvents([]); // zapobiega crashowi
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching events:", err);
+      setEvents([]); // zapobiega crashowi
+    });
+}, []);
+
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);

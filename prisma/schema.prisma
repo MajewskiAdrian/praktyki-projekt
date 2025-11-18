@@ -15,7 +15,7 @@ model User {
   createdAt DateTime  @default(now())
   theme     String?   @default("light")
 
-  events    Event[]   @relation("EventCreator")       // eventy które użytkownik stworzył
+  events    Event[]   @relation("CreatedEvents")      // eventy które użytkownik stworzył
   attending Event[]   @relation("EventAttendees")     // eventy na które użytkownik się zapisał
 }
 
@@ -31,11 +31,13 @@ model Event {
   creator      User      @relation("CreatedEvents", fields: [creatorId], references: [id])
 
   attendees User[]    @relation("EventAttendees")
-
-  tags Tag[]     @relation("EventTags")
+  tags      Tag[]     @relation("EventTags")
 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([eventDate])
+  @@index([latitude, longitude])
 }
 
 model Tag {

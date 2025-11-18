@@ -141,7 +141,7 @@ export default function EventData({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="space-y-4">
+        <div className="space-y-4 h-full flex flex-col">
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
               Description
@@ -175,13 +175,13 @@ export default function EventData({
               })}
             </p>
           </div>
-          <div>
+          <div className="flex-1 min-h-0">
             <EventAttendees
               eventId={String(event.id)}
               initialAttendees={attendees}
             />
           </div>
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
             <JoinEventButton
               eventId={event.id}
               initialIsJoined={isUserJoined}

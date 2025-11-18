@@ -5,15 +5,18 @@ import { prisma } from "@/lib/prisma";
 // Dodaj metodę GET do pobierania eventów
 export async function GET(req: Request) {
   try {
+    console.log("🔹 Connecting to database...");
     const events = await prisma.event.findMany({
       orderBy: { eventDate: 'desc' },
     });
+    console.log("🔹 Events fetched:", events);
     return NextResponse.json(events);
   } catch (err: any) {
     console.error("❌ Error in GET /api/events:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error", details: String(err) }, { status: 500 });
   }
 }
+
 
 export async function POST(req: Request) {
   try {
