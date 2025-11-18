@@ -2,12 +2,11 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 
-// Dodaj metodę GET do pobierania eventów
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    console.log("🔹 Connecting to database...");
     const events = await prisma.event.findMany({
-      orderBy: { eventDate: 'desc' },
+      orderBy: { eventDate: "desc" },
+      include: { creator: true, tags: true }, // pobieramy też creator
     });
     console.log("🔹 Events fetched:", events);
     return NextResponse.json(events);
@@ -17,13 +16,11 @@ export async function GET(req: Request) {
   }
 }
 
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("📥 Received body:", body);
 
-    // Walidacja
     const missing: string[] = [];
     if (!body.title) missing.push("title");
     if (!body.description) missing.push("description");
@@ -35,7 +32,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields", fields: missing }, { status: 400 });
     }
 
-    // Token
     const cookieHeader = req.headers.get("cookie") || "";
     const tokenCookie = cookieHeader.split("; ").find((c) => c.startsWith("token="));
     const tokenValue = tokenCookie?.split("=")[1];
@@ -53,7 +49,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // 🔥 TU BYŁ BRAK — zapis eventu!
     const newEvent = await prisma.event.create({
       data: {
         title: body.title,
@@ -62,11 +57,15 @@ export async function POST(req: Request) {
         longitude: body.longitude,
         eventDate: new Date(body.eventDate),
         creatorId,
+        maxAttendees: body.maxAttendees ?? undefined,
+        tags: body.tagIds?.length
+          ? ({ connect: body.tagIds.map((id: number) => ({ id })) } as any)
+          : undefined,
       },
+      include: { creator: true },
     });
 
     console.log("✅ Event created:", newEvent);
-
     return NextResponse.json(newEvent, { status: 201 });
   } catch (err: any) {
     console.error("❌ Error in POST /api/events:", err);

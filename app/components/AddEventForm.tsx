@@ -15,7 +15,7 @@ export default function AddEventForm({
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [maxAttendees, setMaxAttendees] = useState("");
-  //const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,7 +32,7 @@ export default function AddEventForm({
         longitude: lng,
         eventDate,
         maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
-        //tagIds: selectedTags, // WAŻNE: sprawdź czy to jest wysyłane
+        tagIds: selectedTags,
       });
 
       const response = await fetch("/api/events", {
@@ -46,36 +46,30 @@ export default function AddEventForm({
           longitude: lng,
           eventDate,
           maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
-          //tagIds: selectedTags, // Przekaż wybrane tagi
+          tagIds: selectedTags,
         }),
       });
 
       if (!response.ok) {
-  const body = await response.text(); // ✔️ odczyt JEDEN raz
-
-  let errorMessage = "Failed to create event";
-
-  try {
-    const json = JSON.parse(body);
-    errorMessage = json.error || errorMessage;
-  } catch {
-    // Jeśli to nie jest JSON, body zostaje jako tekst
-    errorMessage = body || `Server error: ${response.status}`;
-  }
-
-  throw new Error(errorMessage);
-}
-
+        const body = await response.text();
+        let errorMessage = "Failed to create event";
+        try {
+          const json = JSON.parse(body);
+          errorMessage = json.error || errorMessage;
+        } catch {
+          errorMessage = body || `Server error: ${response.status}`;
+        }
+        throw new Error(errorMessage);
+      }
 
       const data = await response.json();
       console.log("✅ Event created:", data);
 
-      // Reset formularza
       setTitle("");
       setDescription("");
       setEventDate("");
       setMaxAttendees("");
-      //setSelectedTags([]);
+      setSelectedTags([]);
 
       if (onEventAdded) onEventAdded();
     } catch (err: any) {
@@ -144,7 +138,7 @@ export default function AddEventForm({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Tags
         </label>
-        {/*<EventTags selectedTags={selectedTags} onChange={setSelectedTags} />*/}
+        <EventTags selectedTags={selectedTags} onChange={setSelectedTags} />
       </div>
 
       {error && (

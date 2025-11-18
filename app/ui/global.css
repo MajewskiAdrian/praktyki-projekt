@@ -46,3 +46,11 @@ body::-webkit-scrollbar {
   height: 0 !important;
   background: transparent !important;
 }
+
+/* Ukryj WSZYSTKIE scrollbary wewnątrz elementów z klasą scrollbar-hide */
+.scrollbar-hide *::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-hide * {
+  scrollbar-width: none !important;
+}

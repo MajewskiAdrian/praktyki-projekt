@@ -69,17 +69,15 @@ export default function EventData({
           }
 
           // Sprawdź czy user jest w attendees
-          const isJoined = attendeesList.some(
-            (attendee: any) => {
-              const attendeeId = String(attendee.id);
-              const userIdStr = String(userId);
-              console.log(
-                `Comparing: "${attendeeId}" === "${userIdStr}"`,
-                attendeeId === userIdStr
-              );
-              return attendeeId === userIdStr;
-            }
-          );
+          const isJoined = attendeesList.some((attendee: any) => {
+            const attendeeId = String(attendee.id);
+            const userIdStr = String(userId);
+            console.log(
+              `Comparing: "${attendeeId}" === "${userIdStr}"`,
+              attendeeId === userIdStr
+            );
+            return attendeeId === userIdStr;
+          });
 
           console.log("✅ Is user joined:", isJoined);
           setIsUserJoined(isJoined);
@@ -149,6 +147,21 @@ export default function EventData({
             <p className="text-black dark:text-white text-base">
               {event.description}
             </p>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
+              Tags
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {event.tags?.map((tag: { id: number; name: string }) => (
+                <div
+                  key={tag.id}
+                  className="bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-white px-2 py-1 rounded-full text-xs font-medium"
+                >
+                  {tag.name}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
