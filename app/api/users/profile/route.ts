@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTokenFromReq, verifyToken } from "@/lib/auth";
+import { writeFile, unlink } from "fs/promises";
+import { join } from "path";
+import { existsSync } from "fs";
 
 function validateUsername(raw: unknown): string | null {
   if (raw === undefined || raw === null) return null; // brak zmiany
@@ -47,12 +50,26 @@ export async function PATCH(req: NextRequest) {
     const decoded = verifyToken(token);
     if (!decoded?.id) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
-    const body = await req.json().catch(() => ({}));
-    const { name, trueName, bio } = body as {
-      name?: unknown;
-      trueName?: unknown;
-      bio?: unknown;
-    };
+    const contentType = req.headers.get("content-type") || "";
+    
+    let body: any = {};
+    let avatarFile: File | null = null;
+    let shouldRemoveAvatar = false;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      body = {
+        name: formData.get("name"),
+        trueName: formData.get("trueName"),
+        bio: formData.get("bio"),
+      };
+      avatarFile = formData.get("avatar") as File | null;
+      shouldRemoveAvatar = formData.get("removeAvatar") === "true";
+    } else {
+      body = await req.json().catch(() => ({}));
+    }
+
+    const { name, trueName, bio } = body;
 
     const nameErr = validateUsername(name);
     if (name !== undefined && nameErr)
@@ -69,7 +86,7 @@ export async function PATCH(req: NextRequest) {
     if (trueName !== undefined) data.trueName = (trueName as string | null) ?? null;
     if (bio !== undefined) data.bio = (bio as string | null) ?? null;
 
-    // Sprawdź unikalność username jeżeli zmieniamy
+    // Sprawdź unikalność username
     if (data.name) {
       const exists = await prisma.user.findFirst({
         where: { name: data.name, NOT: { id: decoded.id } },
@@ -78,10 +95,48 @@ export async function PATCH(req: NextRequest) {
       if (exists) return NextResponse.json({ error: "Username jest zajęty", field: "name" }, { status: 409 });
     }
 
+    // Obsługa avatara
+    if (shouldRemoveAvatar) {
+      const user = await prisma.user.findUnique({ where: { id: decoded.id }, select: { avatarUrl: true } });
+      if (user?.avatarUrl) {
+        const oldPath = join(process.cwd(), "public", user.avatarUrl);
+        if (existsSync(oldPath)) {
+          await unlink(oldPath).catch(console.error);
+        }
+      }
+      data.avatarUrl = null;
+    } else if (avatarFile && avatarFile.size > 0) {
+      // Walidacja pliku
+      if (avatarFile.size > 2 * 1024 * 1024) {
+        return NextResponse.json({ error: "Avatar max 2MB" }, { status: 400 });
+      }
+      if (!avatarFile.type.startsWith("image/")) {
+        return NextResponse.json({ error: "Avatar must be an image" }, { status: 400 });
+      }
+
+      // Usuń stary avatar
+      const user = await prisma.user.findUnique({ where: { id: decoded.id }, select: { avatarUrl: true } });
+      if (user?.avatarUrl) {
+        const oldPath = join(process.cwd(), "public", user.avatarUrl);
+        if (existsSync(oldPath)) {
+          await unlink(oldPath).catch(console.error);
+        }
+      }
+
+      // Zapisz nowy
+      const bytes = await avatarFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const ext = avatarFile.name.split(".").pop() || "jpg";
+      const filename = `${decoded.id}-${Date.now()}.${ext}`;
+      const filepath = join(process.cwd(), "public", "avatars", filename);
+      await writeFile(filepath, buffer);
+      data.avatarUrl = `/avatars/${filename}`;
+    }
+
     const updated = await prisma.user.update({
       where: { id: decoded.id },
       data,
-      select: { id: true, name: true, email: true, trueName: true, bio: true },
+      select: { id: true, name: true, email: true, trueName: true, bio: true, avatarUrl: true },
     });
 
     return NextResponse.json({ user: updated });

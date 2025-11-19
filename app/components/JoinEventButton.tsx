@@ -15,7 +15,7 @@ export default function JoinEventButton({
   initialIsJoined = false,
   onStatusChange,
   isFull,
-  isCreator = false
+  isCreator = false,
 }: JoinEventButtonProps) {
   const [isJoined, setIsJoined] = useState(initialIsJoined);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +68,8 @@ export default function JoinEventButton({
     >
       {isLoading
         ? "Processing..."
+        : isCreator
+        ? "You are the creator"
         : isFull && !isJoined
         ? "Event Full"
         : isJoined

@@ -71,24 +71,28 @@ export default function ProfileForm() {
     setError(null);
     setOk(false);
     try {
-      const form = new FormData();
-      form.append("name", username);
-      form.append("trueName", realName || "");
-      form.append("bio", bio || "");
+      const formData = new FormData();
+      formData.append("name", username);
+      formData.append("trueName", realName || "");
+      formData.append("bio", bio || "");
+      
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
       if (removeAvatar) {
-        form.append("removeAvatar", "true");
-      } else if (avatarFile) {
-        form.append("avatar", avatarFile);
+        formData.append("removeAvatar", "true");
       }
 
       const res = await fetch("/api/users/profile", {
         method: "PATCH",
         credentials: "include",
-        body: form
+        body: formData, // BEZ Content-Type - przeglądarka ustawi z boundary
       });
+      
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || "Failed to save profile");
-      const updated: UserDto = json.user;
+      const updated = json.user;
+      
       setInitial(updated);
       setUsername(updated.name || "");
       setRealName(updated.trueName || "");

@@ -13,6 +13,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [attendees, setAttendees] = useState<any[]>([]);
   const [isUserJoined, setIsUserJoined] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
 
   const getInitials = (name?: string | null) =>
@@ -82,8 +83,16 @@ export default function EventData({ event, onClose }: EventDataProps) {
           if (!userId) {
             console.error("❌ User ID not found!");
             setIsUserJoined(false);
+            setIsCreator(false);
             return;
           }
+
+          // Sprawdź czy aktualny użytkownik to creator eventu
+          const userIdStr = String(userId);
+          const creatorIdStr = String(event.creator?.id || "");
+          const amCreator = userIdStr === creatorIdStr;
+          console.log("🔑 Is creator:", amCreator);
+          setIsCreator(amCreator);
 
           // Sprawdź czy user jest w attendees
           const isJoined = attendeesList.some((attendee: any) => {
@@ -101,6 +110,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
         } else {
           console.error("❌ Failed to fetch user profile");
           setIsUserJoined(false);
+          setIsCreator(false);
         }
       } catch (error) {
         console.error("Error fetching event data:", error);
@@ -220,7 +230,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
               Location
             </h4>
             <p className="text-black dark:text-white text-sm">
-              📍 {locationName || "Loading location..."}
+              {locationName || "Loading location..."}
             </p>
           </div>
 
@@ -229,7 +239,6 @@ export default function EventData({ event, onClose }: EventDataProps) {
               Date & Time
             </h4>
             <p className="text-black dark:text-white text-sm">
-              🗓️{" "}
               {new Date(event.eventDate).toLocaleString(undefined, {
                 year: "numeric",
                 month: "short",
@@ -250,6 +259,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
             <JoinEventButton
               eventId={event.id}
               initialIsJoined={isUserJoined}
+              isCreator={isCreator}
               onStatusChange={handleJoinStatusChange}
               isFull={
                 event.maxAttendees
