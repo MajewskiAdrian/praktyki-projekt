@@ -11,8 +11,8 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import AddEventForm from "./AddEventForm";
-import JoinEventButton from "./JoinEventButton";
 import LocationSearch from "./LocationSearch";
+//import type { MyEvent } from "../page.tsx"; // ścieżka dostosuj do lokalizacji
 
 // poprawa błędu z domyślną ikoną Leaflet w Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -65,19 +65,39 @@ function MapController({ center }: { center: [number, number] | null }) {
   return null;
 }
 
-interface MapProps {
-  onEventAdded?: () => void;
-  focusedEventId?: number | null;
-  onLocationSearch?: (location: { lat: number; lng: number }) => void;
-  searchLocation?: { lat: number; lng: number } | null;
+interface MyEvent {
+  id: number;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  eventDate: string;
 }
 
-export default function Map({ onEventAdded, focusedEventId, onLocationSearch, searchLocation }: MapProps) {
+interface MapProps {
+  onEventAdded?: (newEvent: MyEvent) => void;
+  focusedEventId: number | null;
+  searchLocation: { lat: number; lng: number } | null;
+  onLocationSearch: (loc: { lat: number; lng: number }) => void;
+  onEventClick: (event: MyEvent) => void; // ← nowy typ
+}
+
+export default function Map({
+  onEventAdded,
+  focusedEventId,
+  onLocationSearch,
+  searchLocation,
+  onEventClick,
+}: MapProps) {
   const [mounted, setMounted] = useState(false);
-  const [events, setEvents] = useState<any[]>([]);
-  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
+  const [events, setEvents] = useState<MyEvent[]>([]);
+  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
+    null
+  );
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(null);
+  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(
+    null
+  );
   const markerRef = useRef<L.Marker | null>(null);
   const markerRefs = useRef<{ [key: number]: L.Marker }>({});
 
@@ -87,7 +107,7 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
 
   useEffect(() => {
     const checkDarkMode = () => {
-      const isDark = document.documentElement.classList.contains('dark');
+      const isDark = document.documentElement.classList.contains("dark");
       setIsDarkMode(isDark);
     };
 
@@ -96,7 +116,7 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ["class"],
     });
 
     return () => observer.disconnect();
@@ -118,9 +138,10 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
       .catch((err) => console.error("Failed to load events:", err));
   };
 
-  const handleEventAdded = () => {
-    loadEvents();
-    if (onEventAdded) onEventAdded();
+  const handleEventAdded = (newEvent: MyEvent) => {
+    loadEvents(); // załaduj wszystkie eventy
+    setMarkerPosition(null);
+    if (onEventAdded) onEventAdded(newEvent); // przekaż nowy event do parenta
   };
 
   useEffect(() => {
@@ -130,10 +151,10 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
   // Focus na evencie gdy focusedEventId się zmieni
   useEffect(() => {
     if (focusedEventId) {
-      const event = events.find(e => e.id === focusedEventId);
+      const event = events.find((e) => e.id === focusedEventId);
       if (event) {
         setCenterLocation([event.latitude, event.longitude]);
-        
+
         setTimeout(() => {
           const marker = markerRefs.current[focusedEventId];
           if (marker) {
@@ -193,7 +214,7 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
         scrollWheelZoom={true}
         className="w-full h-full rounded-lg z-0"
         style={{
-          filter: isDarkMode ? 'invert(1) hue-rotate(180deg)' : 'none',
+          filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
         }}
         minZoom={3}
         maxBounds={[
@@ -223,8 +244,12 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
               },
             }}
           >
-            <Popup autoClose={false}>
-              <div style={{ filter: isDarkMode ? 'invert(1) hue-rotate(180deg)' : 'none' }}>
+            <Popup>
+              <div
+                style={{
+                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                }}
+              >
                 <AddEventForm
                   lat={markerPosition[0]}
                   lng={markerPosition[1]}
@@ -236,8 +261,8 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
         )}
 
         {events.map((event) => (
-          <Marker 
-            key={event.id} 
+          <Marker
+            key={event.id}
             position={[event.latitude, event.longitude]}
             ref={(ref) => {
               if (ref) {
@@ -246,10 +271,22 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
             }}
           >
             <Popup>
-              <div style={{ filter: isDarkMode ? 'invert(1) hue-rotate(180deg)' : 'none' }}>
+              <div
+                style={{
+                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                }}
+                className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+              >
                 <strong>{event.title}</strong>
                 <br />
-                {event.description}
+
+                <button
+                  onClick={() => onEventClick(event)}
+                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  Szczegóły
+                </button>
+
                 <br />
                 <small>
                   {event.eventDate &&
@@ -261,7 +298,6 @@ export default function Map({ onEventAdded, focusedEventId, onLocationSearch, se
                       minute: "2-digit",
                     })}
                 </small>
-                <JoinEventButton eventId={event.id} />
               </div>
             </Popup>
           </Marker>

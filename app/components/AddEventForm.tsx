@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import EventTags from "./EventTags";
+import { MyEvent } from "../types";
 
 export default function AddEventForm({
   lat,
@@ -9,7 +10,7 @@ export default function AddEventForm({
 }: {
   lat: number;
   lng: number;
-  onEventAdded?: () => void;
+  onEventAdded?: (newEvent: MyEvent) => void;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -71,7 +72,7 @@ export default function AddEventForm({
       setMaxAttendees("");
       setSelectedTags([]);
 
-      if (onEventAdded) onEventAdded();
+      if (onEventAdded) onEventAdded(data);
     } catch (err: any) {
       console.error("❌ Error creating event:", err);
       setError(err.message);

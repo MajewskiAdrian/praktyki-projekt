@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     road: data.address.road || null,
     number: data.address.house_number || null,
     label: [
-      data.address.road + (data.address.house_number ? " " + data.address.house_number : ""),
+      (data.address.road ? data.address.road + (data.address.house_number ? " " + data.address.house_number : "") : ""),
       data.address.suburb,
       data.address.city || data.address.town || data.address.village,
     ]

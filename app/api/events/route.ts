@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const events = await prisma.event.findMany({
       orderBy: { eventDate: "desc" },
-      include: { creator: true, tags: true }, // pobieramy też creator
+      include: { creator: {select: {id: true, name: true, email: true} }, tags: true }, // pobieramy też creator
     });
     console.log("🔹 Events fetched:", events);
     return NextResponse.json(events);

@@ -11,12 +11,14 @@ interface EventAttendeesProps {
   eventId: string;
   initialAttendees?: Attendee[];
   onAttendeesUpdate?: (attendees: Attendee[]) => void;
+  maxAttendees?: number;
 }
 
 export default function EventAttendees({ 
   eventId, 
   initialAttendees = [],
-  onAttendeesUpdate 
+  onAttendeesUpdate,
+  maxAttendees
 }: EventAttendeesProps) {
   const [attendees, setAttendees] = useState<Attendee[]>(initialAttendees);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ export default function EventAttendees({
   return (
     <div>
       <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-        Attendees ({attendees.length})
+        Attendees {maxAttendees ? `(${attendees.length}/${maxAttendees})` : `(${attendees.length})`}
       </h4>
       {attendees.length === 0 ? (
         <p className="text-sm text-gray-600 dark:text-gray-400">

@@ -2,18 +2,35 @@ import { useEffect, useState } from "react";
 import JoinEventButton from "./JoinEventButton";
 import EventAttendees from "./EventAttendees";
 import EventDataSkeleton from "./EventDataSkeleton";
+import { Event } from "./EventsList";
 
-export default function EventData({
-  event,
-  onClose,
-}: {
-  event: any;
+interface EventDataProps {
+  event: Event;
   onClose: () => void;
-}) {
+}
+
+export default function EventData({ event, onClose }: EventDataProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [attendees, setAttendees] = useState<any[]>([]);
   const [isUserJoined, setIsUserJoined] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
+
+  const getInitials = (name?: string | null) =>
+    (name || "?")
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+
+  // Normalizuj tagi na wszelki wypadek
+  const normalizedTags = event.tags?.map(tag => {
+    if (typeof tag === 'object' && tag !== null) {
+      return (tag as any).name || String(tag);
+    }
+    return String(tag);
+  }).filter(tag => tag.trim() !== '') || [];
 
   useEffect(() => {
     setIsLoading(true);
@@ -148,19 +165,53 @@ export default function EventData({
               {event.description}
             </p>
           </div>
+          
+          {/* Tags section - UŻYWAMY normalizedTags */}
+          {normalizedTags.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                Tags
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {normalizedTags.map((tag, index) => (
+                  <div
+                    key={`tag-${index}-${tag}`}
+                    className="bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-white px-2 py-1 rounded-full text-xs font-medium"
+                  >
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Author */}
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
-              Tags
+              Author
             </h4>
-            <div className="flex flex-wrap gap-2">
-              {event.tags?.map((tag: { id: number; name: string }) => (
-                <div
-                  key={tag.id}
-                  className="bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-white px-2 py-1 rounded-full text-xs font-medium"
-                >
-                  {tag.name}
+            <div className="flex items-center gap-3">
+              {event.creator?.avatarUrl ? (
+                <img
+                  src={event.creator.avatarUrl}
+                  alt={event.creator?.name || "Author avatar"}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center text-xs font-semibold">
+                  {getInitials(event.creator?.name)}
                 </div>
-              ))}
+              )}
+              <div className="text-sm">
+                <div className="text-black dark:text-white">
+                  {event.creator?.name ?? "Unknown"}
+                </div>
+                {event.creator?.email && (
+                  <div className="text-gray-500 dark:text-gray-400 text-xs">
+                    {event.creator.email}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -192,6 +243,7 @@ export default function EventData({
             <EventAttendees
               eventId={String(event.id)}
               initialAttendees={attendees}
+              maxAttendees={event.maxAttendees}
             />
           </div>
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
@@ -199,6 +251,11 @@ export default function EventData({
               eventId={event.id}
               initialIsJoined={isUserJoined}
               onStatusChange={handleJoinStatusChange}
+              isFull={
+                event.maxAttendees
+                  ? attendees.length >= event.maxAttendees
+                  : false
+              }
             />
           </div>
         </div>

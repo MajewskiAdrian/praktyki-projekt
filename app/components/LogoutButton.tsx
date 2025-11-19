@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 
-export default function LogoutButton() {
+type Props = {
+  className?: string;
+};
+
+export default function LogoutButton({ className }: Props) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -27,7 +31,10 @@ export default function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={isLoggingOut}
-      /*className="w-full text-left px-3 py-1 bg-transparent text-gray-50 cursor-pointer rounded disabled:opacity-50 focus:outline-none ease-in-out duration-300"*/
+      className={
+        className ??
+        ""
+      }
       aria-disabled={isLoggingOut}
     >
       {isLoggingOut ? "Logging out..." : "Logout"}
