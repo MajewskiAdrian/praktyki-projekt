@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ChannelCard from './ChannelCard';
+import Link from 'next/link';
 
 interface Channel {
   id: string;
@@ -25,6 +27,7 @@ export default function ChannelList() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchChannels();
@@ -88,18 +91,34 @@ export default function ChannelList() {
 
   if (channels.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        <p className="text-xl mb-2">No channels yet</p>
-        <p>Be the first to create one!</p>
+      <div>
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          ← Back to Home
+        </Link>
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-xl mb-2">No channels yet</p>
+          <p>Be the first to create one!</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {channels.map((channel) => (
-        <ChannelCard key={channel.id} channel={channel} />
-      ))}
+    <div>
+      <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        ← Back to Home
+      </Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {channels.map((channel) => (
+          <ChannelCard key={channel.id} channel={channel} />
+        ))}
+      </div>
     </div>
   );
 }

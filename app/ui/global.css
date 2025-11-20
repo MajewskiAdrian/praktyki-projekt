@@ -8,6 +8,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+
 /* Reset i globalne style */
 html, body {
   margin: 0;

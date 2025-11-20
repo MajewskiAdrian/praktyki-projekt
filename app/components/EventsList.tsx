@@ -149,7 +149,7 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
               {event.description}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-               {new Date(event.eventDate).toLocaleString()}
+              {new Date(event.eventDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
             </p>
             {event.tags && event.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">

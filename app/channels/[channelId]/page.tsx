@@ -3,6 +3,7 @@ import SendMessageForm from '@/app/components/Channels/SendMessageForm';
 import FollowButton from '@/app/components/Channels/FollowButton';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import Link from 'next/link';
 
 async function getCurrentUser() {
   try {
@@ -39,9 +40,9 @@ export default async function ChannelPage({
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold text-red-600">Channel not found</h1>
-          <a href="/channels" className="text-blue-600 hover:underline mt-4 inline-block">
+          <Link href="/channels" className="text-blue-600 hover:underline mt-4 inline-block">
             ← Back to channels
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -78,6 +79,17 @@ export default async function ChannelPage({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Back Button */}
+      <Link 
+        href="/channels" 
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to channels
+      </Link>
+
       {/* Channel Header */}
       <div className="mb-6 border-b pb-6">
         <div className="flex items-start justify-between gap-4">

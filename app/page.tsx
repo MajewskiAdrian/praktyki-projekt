@@ -27,7 +27,7 @@ export default function Home() {
 
   const handleEventAdded = (newEvent: MyEvent) => {
     setRefreshKey((prev) => prev + 1);
-    setFocusedEventId(newEvent.id); // od razu focus na nowy event
+    setFocusedEventId(newEvent.id);
   };
 
   const handleEventClick = useCallback((event: MyEvent) => {
@@ -38,14 +38,14 @@ export default function Home() {
   const handleLocationSearch = useCallback(
     (location: { lat: number; lng: number }) => {
       setSearchLocation(location);
-      setFocusedEventId(null); // Reset focused event
+      setFocusedEventId(null);
     },
     []
   );
 
   return (
     <main className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
-      <header className="bg-gray-300 dark:bg-gray-800 flex justify-between items-center px-6 py-4 mb-6 rounded-b-sm">
+      <header className="bg-gray-300 dark:bg-gray-800 flex justify-between items-center px-6 py-4 mb-6 rounded-b-sm relative z-50">
         <div className="text-black dark:text-white font-semibold m-0">Venn</div>
         <CircleMenu />
       </header>
@@ -57,7 +57,7 @@ export default function Home() {
             focusedEventId={focusedEventId}
             onLocationSearch={handleLocationSearch}
             searchLocation={searchLocation}
-            onEventClick={handleEventClick} // teraz przekazujemy cały event
+            onEventClick={handleEventClick}
           />
         </div>
 

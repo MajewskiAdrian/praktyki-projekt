@@ -152,7 +152,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
   console.log("🎯 Rendering with isUserJoined:", isUserJoined);
 
   return (
-    <div className="absolute inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col animate-fadeIn">
+    <div className="absolute inset-0 bg-white dark:bg-gray-800 z-40 flex flex-col animate-fadeIn">
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
         <h3 className="text-2xl font-bold text-black dark:text-white">
           {event.title}
