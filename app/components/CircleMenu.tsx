@@ -110,7 +110,7 @@ export default function CircleMenu() {
         aria-haspopup="true"
         aria-expanded={isOpen}
         aria-controls="circle-menu"
-        className="w-12 h-12 rounded-full bg-blue-500 text-white shadow flex items-center justify-center text-xl focus:outline-none"
+        className="w-12 h-12 rounded-full bg-amber-500 text-white shadow flex items-center justify-center text-xl focus:outline-none"
         aria-label="Toggle menu"
       >
         ☰

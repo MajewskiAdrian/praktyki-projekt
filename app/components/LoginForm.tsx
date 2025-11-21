@@ -73,7 +73,7 @@ export default function LoginForm() {
         value={formData.email}
         onChange={handleChange}
         placeholder="Email"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
 
       <input
@@ -82,7 +82,7 @@ export default function LoginForm() {
         value={formData.password}
         onChange={handleChange}
         placeholder="Password"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
 
       {/* status message */}
@@ -101,14 +101,14 @@ export default function LoginForm() {
 
       <button
         type="submit"
-        className="bg-blue-500 text-white p-3 rounded-[1.20rem] hover:bg-blue-600 transition-colors duration-200"
+        className="bg-amber-500 text-white p-3 rounded-[1.20rem] hover:bg-amber-600 transition-colors duration-200"
       >
         {isSubmitting ? "Sending..." : "Login"}
       </button>
 
       <p className="text-center text-gray-600">
         Don't have an account yet?{" "}
-        <Link href="/register" className="text-blue-500 hover:text-blue-700">
+        <Link href="/register" className="text-amber-500 hover:text-amber-700">
           Register here
         </Link>
       </p>

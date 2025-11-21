@@ -8,7 +8,7 @@ export default async function ChannelsPage() {
         <h1 className="text-3xl font-bold">Channels</h1>
         <Link
           href="/channels/create"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
         >
           + Create Channel
         </Link>

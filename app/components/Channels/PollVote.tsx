@@ -109,14 +109,14 @@ export default function PollVote({
               disabled={loading}
               className={`w-full text-left p-3 border rounded-lg transition-all relative overflow-hidden ${
                 isSelected 
-                  ? 'border-blue-500 bg-blue-50' 
+                  ? 'border-amber-500 bg-amber-50' 
                   : 'border-gray-300 hover:bg-gray-100'
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {/* Progress bar */}
               {totalVotes > 0 && (
                 <div 
-                  className="absolute inset-0 bg-blue-100 opacity-30 transition-all duration-300"
+                  className="absolute inset-0 bg-amber-100 opacity-30 transition-all duration-300"
                   style={{ width: `${percentage}%` }}
                 />
               )}

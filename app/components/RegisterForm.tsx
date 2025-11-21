@@ -87,7 +87,7 @@ export default function RegisterForm() {
         value={formData.username}
         onChange={handleChange}
         placeholder="Username"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
       <input
         type="email"
@@ -95,7 +95,7 @@ export default function RegisterForm() {
         value={formData.email}
         onChange={handleChange}
         placeholder="Email"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
       <input
         type="password"
@@ -103,7 +103,7 @@ export default function RegisterForm() {
         value={formData.password}
         onChange={handleChange}
         placeholder="Password"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
       <input
         type="password"
@@ -111,7 +111,7 @@ export default function RegisterForm() {
         value={formData.confirmPassword}
         onChange={handleChange}
         placeholder="Confirm Password"
-        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-blue-500 focus:bg-gray-200 outline-none transition-all duration-400"
+        className="border-2 p-3 border-gray-500 rounded-[1.20rem] text-gray-800 focus:border-amber-500 focus:bg-gray-200 outline-none transition-all duration-400"
       />
       {/* status message */}
       {statusMsg && (
@@ -125,7 +125,7 @@ export default function RegisterForm() {
         >
           {statusMsg + ". "}
           {statusType === "success" && (
-            <Link href="/login" className="text-blue-500 hover:text-blue-700">
+            <Link href="/login" className="text-amber-500 hover:text-amber-700">
               Login now
             </Link>
           )}
@@ -133,14 +133,14 @@ export default function RegisterForm() {
       )}
       <button
         type="submit"
-        className="bg-blue-500 text-white p-3 rounded-[1.20rem] hover:bg-blue-600 transition-colors duration-200"
+        className="bg-amber-500 text-white p-3 rounded-[1.20rem] hover:bg-amber-600 transition-colors duration-200"
       >
         {isSubmitting ? "Sending..." : "Register"}
       </button>
 
       <p className="text-center text-gray-600">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-500 hover:text-blue-700">
+        <Link href="/login" className="text-amber-500 hover:text-amber-700">
           Login here
         </Link>
       </p>

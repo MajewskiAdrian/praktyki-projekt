@@ -14,6 +14,8 @@ export interface Event {
   longitude: number;
   eventDate: string;
   tags?: string[];
+  location?: string;
+  locationLoading?: boolean;
 }
 
 interface EventsListProps {
@@ -29,10 +31,23 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [searchText, setSearchText] = useState("");
+  const [searchType, setSearchType] = useState<"text" | "location">("text");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const fetchLocation = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const response = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
+      if (!response.ok) return "";
+      const data = await response.json();
+      return data.city || "";
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      return "";
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -46,25 +61,37 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
         }
         return res.json();
       })
-      .then((data: any[]) => {
-        // Konwersja danych - upewnij się, że tags jest tablicą stringów
+      .then(async (data: any[]) => {
         const normalizedEvents: Event[] = data.map((event) => ({
           ...event,
           tags: Array.isArray(event.tags)
             ? event.tags.map((tag: any) => {
-                // Jeśli tag jest obiektem z właściwością 'name', użyj name
                 if (typeof tag === 'object' && tag !== null) {
                   return tag.name || tag.id?.toString() || '';
                 }
-                // Jeśli tag jest stringiem, użyj go bezpośrednio
                 return String(tag);
               }).filter((tag: string) => tag.trim() !== '')
-            : []
+            : [],
+          location: undefined,
+          locationLoading: true
         }));
         
         setEvents(normalizedEvents);
+        setLoading(false);
 
-        // Wyciągnij wszystkie unikalne tagi
+        // Pobieraj lokalizacje sekwencyjnie od góry do dołu
+        for (const event of normalizedEvents) {
+          const location = await fetchLocation(event.latitude, event.longitude);
+          
+          setEvents(prevEvents => 
+            prevEvents.map(e => 
+              e.id === event.id 
+                ? { ...e, location, locationLoading: false } 
+                : e
+            )
+          );
+        }
+
         const tags = new Set<string>();
         normalizedEvents.forEach((event) => {
           event.tags?.forEach((tag) => {
@@ -79,23 +106,27 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
         console.error("❌ Fetch error:", err);
         setError("Failed to load events.");
         setEvents([]);
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
     let result = [...events];
 
-    // Wyszukiwanie po tytule i opisie
     if (searchText) {
-      result = result.filter(
-        (event) =>
-          event.title.toLowerCase().includes(searchText.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchText.toLowerCase())
-      );
+      if (searchType === "location") {
+        result = result.filter((event) =>
+          event.location && event.location.toLowerCase().includes(searchText.toLowerCase())
+        );
+      } else {
+        result = result.filter(
+          (event) =>
+            event.title.toLowerCase().includes(searchText.toLowerCase()) ||
+            event.description.toLowerCase().includes(searchText.toLowerCase())
+        );
+      }
     }
 
-    // Filtrowanie po przedziale dat
     if (startDate) {
       result = result.filter(
         (event) => new Date(event.eventDate) >= new Date(startDate)
@@ -107,14 +138,12 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
       );
     }
 
-    // Filtrowanie po tagach
     if (selectedTags.length > 0) {
       result = result.filter((event) =>
         selectedTags.every((tag) => event.tags?.includes(tag))
       );
     }
 
-    // Sortowanie
     if (sortBy === "date") {
       result.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
     } else if (sortBy === "title") {
@@ -122,7 +151,7 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
     }
 
     setFilteredEvents(result);
-  }, [events, sortBy, searchText, selectedTags, startDate, endDate]);
+  }, [events, sortBy, searchText, searchType, selectedTags, startDate, endDate]);
 
   if (loading) return <p className="p-4">Loading events...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
@@ -131,7 +160,12 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
     <div className="relative h-full w-full flex flex-col">
       {/* KONTROLKI */}
       <div className={`p-4 space-y-2 border-b dark:border-gray-700 ${selectedEvent ? "blur-sm pointer-events-none" : ""}`}>
-        <SearchBar searchText={searchText} setSearchText={setSearchText} />
+        <SearchBar 
+          searchText={searchText} 
+          setSearchText={setSearchText}
+          searchType={searchType}
+          setSearchType={setSearchType}
+        />
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
@@ -158,16 +192,34 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
           <li
             key={event.id}
             onClick={() => {
-              setSelectedEvent(event);
-              onEventClick(event);
+              if (!event.locationLoading) {
+                setSelectedEvent(event);
+                onEventClick(event);
+              }
             }}
-            className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className={`bg-white dark:bg-gray-700 p-4 rounded shadow transition-all
+              ${event.locationLoading 
+                ? 'opacity-50 cursor-wait' 
+                : 'hover:shadow-lg cursor-pointer hover:scale-[1.02]'
+              }`}
           >
             <h3 className="font-bold text-lg text-black dark:text-white">
               {event.title}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {event.description}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {event.locationLoading ? (
+                <span className="inline-flex items-center gap-1">
+                  <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                  Loading location...
+                </span>
+              ) : event.location ? (
+                ` ${event.location}`
+              ) : (
+                ' Location unavailable'
+              )}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {new Date(event.eventDate).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
@@ -177,7 +229,7 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
                 {event.tags.map((tag, index) => (
                   <span
                     key={`${event.id}-${tag}-${index}`}
-                    className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                    className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 rounded"
                   >
                     {tag}
                   </span>

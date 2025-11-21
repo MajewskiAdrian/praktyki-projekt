@@ -56,7 +56,7 @@ export default function ReactionButton({
       disabled={loading}
       className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-all ${
         isUserReaction
-          ? 'bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-700'
+          ? 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-700'
           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
       } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       title={isUserReaction ? `${users.join(', ')} (Click to remove)` : users.join(', ')}

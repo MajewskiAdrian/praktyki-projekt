@@ -57,7 +57,7 @@ export default function MessageFeed({ channelId }: { channelId: string }) {
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
         <p className="text-gray-500 mt-2">Loading messages...</p>
       </div>
     );

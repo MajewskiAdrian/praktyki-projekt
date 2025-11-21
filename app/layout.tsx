@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Venn",
   description: "Event planning app",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

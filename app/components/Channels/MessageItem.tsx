@@ -67,7 +67,7 @@ export default function MessageItem({
     <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-white font-semibold">
           {message.author?.name?.charAt(0).toUpperCase() || '?'}
         </div>
         <div>

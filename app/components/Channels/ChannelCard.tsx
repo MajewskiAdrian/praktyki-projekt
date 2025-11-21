@@ -34,7 +34,7 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
               {channel.title.charAt(0).toUpperCase()}
             </div>
           )}
@@ -53,7 +53,7 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
                 </span>
               )}
               {userRole === 'MODERATOR' && (
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">
                   🛡️ Mod
                 </span>
               )}

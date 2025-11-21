@@ -60,10 +60,10 @@ export default function JoinEventButton({
     <button
       onClick={handleJoinLeave}
       disabled={isLoading || (isFull && !isJoined) || isCreator}
-      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:bg-blue-500 disabled:hover:cursor-default ${
+      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:bg-amber-500 disabled:hover:cursor-default ${
         isJoined
           ? "bg-red-500 hover:bg-red-600 text-white"
-          : "bg-blue-500 hover:bg-blue-600 text-white"
+          : "bg-amber-500 hover:bg-amber-600 text-white"
       }`}
     >
       {isLoading

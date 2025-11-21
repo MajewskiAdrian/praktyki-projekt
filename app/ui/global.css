@@ -89,3 +89,18 @@ body::-webkit-scrollbar {
     }
   }
 }
+
+:root {
+  /* RGB (bez #), tak aby tailwind mógł wstawić alpha: "124 58 237" */
+  --accent: 124 58 237; /* odpowiada #7c3aed */
+  /* opcjonalnie: konkretne odcienie jeśli chcesz używać accent-500, accent-600 itp. */
+  --accent-50: 249 250 251;
+  --accent-100: 243 244 246;
+  --accent-500: 124 58 237;
+  --accent-600: 99 40 213;
+}
+
+/* dark theme example */
+[data-theme="dark"] {
+  --accent: 139 92 246; /* inny RGB dla dark */
+}

@@ -186,7 +186,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
                 {normalizedTags.map((tag, index) => (
                   <div
                     key={`tag-${index}-${tag}`}
-                    className="bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-white px-2 py-1 rounded-full text-xs font-medium"
+                    className="bg-amber-100 dark:bg-amber-700 text-amber-800 dark:text-white px-2 py-1 rounded-full text-xs font-medium"
                   >
                     {tag}
                   </div>

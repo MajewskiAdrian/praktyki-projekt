@@ -42,7 +42,7 @@ export default function FollowButton({ channelId, initialFollowing = false }: Fo
       className={`px-4 py-2 rounded font-medium transition-colors ${
         isFollowing
           ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+          : 'bg-amber-600 text-white hover:bg-amber-700'
       } disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {loading ? 'Loading...' : isFollowing ? '✓ Following' : '+ Follow'}

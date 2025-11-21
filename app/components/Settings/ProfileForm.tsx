@@ -142,7 +142,7 @@ export default function ProfileForm() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={loading || saving}
-              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-60"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-60"
               placeholder="your_username"
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Allowed: letters, numbers, ., _, - (3–32)</p>
@@ -154,7 +154,7 @@ export default function ProfileForm() {
               value={realName}
               onChange={(e) => setRealName(e.target.value)}
               disabled={loading || saving}
-              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-60"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-60"
               placeholder="name"
             />
           </label>
@@ -165,7 +165,7 @@ export default function ProfileForm() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               disabled={loading || saving}
-              className="mt-1 w-full h-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-60"
+              className="mt-1 w-full h-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-60"
               placeholder="Few words about you…"
             />
           </label>
@@ -216,7 +216,7 @@ export default function ProfileForm() {
           <button
             onClick={onSave}
             disabled={saving || loading}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+            className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save changes"}
           </button>

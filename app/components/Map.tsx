@@ -12,15 +12,26 @@ import {
 import L from "leaflet";
 import AddEventForm from "./AddEventForm";
 import LocationSearch from "./LocationSearch";
-//import type { MyEvent } from "../page.tsx"; // ścieżka dostosuj do lokalizacji
 
-// poprawa błędu z domyślną ikoną Leaflet w Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+// Własne ikony
+const customIcon = L.icon({
+  iconUrl: "/pins/custom-marker.png",
+  iconRetinaUrl: "/pins/custom-marker.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const customIconJoined = L.icon({
+  iconUrl: "/pins/custom-marker-joined.png",
+  iconRetinaUrl: "/pins/custom-marker-joined.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
 function ResizeRevalidator() {
@@ -243,6 +254,7 @@ export default function Map({
                 e.target.openPopup();
               },
             }}
+            icon={customIcon}
           >
             <Popup>
               <div
@@ -269,6 +281,9 @@ export default function Map({
                 markerRefs.current[event.id] = ref;
               }
             }}
+            icon={
+              focusedEventId === event.id ? customIconJoined : customIcon
+            }
           >
             <Popup>
               <div
@@ -282,7 +297,7 @@ export default function Map({
 
                 <button
                   onClick={() => onEventClick(event)}
-                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
                 >
                   Details
                 </button>

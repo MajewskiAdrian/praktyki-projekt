@@ -4,11 +4,17 @@ module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // używamy zmiennej CSS, dzięki temu kolor można zmieniać runtime'owo
+        accent: "var(--accent)",
+        // obsługa opacity: używamy "rgb(var(--accent) / <alpha-value>)"
+        "accent-50": "rgb(var(--accent-50) / <alpha-value>)",
+        "accent-500": "rgb(var(--accent-500) / <alpha-value>)",
+      },
+    },
   },
   plugins: [],
 };

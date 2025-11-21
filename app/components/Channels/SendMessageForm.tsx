@@ -113,7 +113,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
           onClick={() => setType('TEXT')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             type === 'TEXT' 
-              ? 'bg-blue-600 text-white' 
+              ? 'bg-amber-600 text-white' 
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
@@ -165,7 +165,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                 ? 'Important announcement...' 
                 : 'Type your message...'
             }
-            className="w-full border rounded p-3 mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full border rounded p-3 mb-3 focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
             rows={3}
             required
           />
@@ -183,7 +183,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                 value={imageUrl}
                 onChange={(e) => handleImageUrlChange(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border rounded p-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -199,7 +199,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Add a caption for your image..."
-                className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full border rounded p-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
                 rows={2}
               />
             </div>
@@ -238,7 +238,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                 value={pollQuestion}
                 onChange={(e) => setPollQuestion(e.target.value)}
                 placeholder="What's your question?"
-                className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                className="w-full border rounded p-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent font-medium"
                 required
               />
             </div>
@@ -261,7 +261,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                         setPollOptions(newOpts);
                       }}
                       placeholder={`Option ${i + 1}`}
-                      className="flex-1 border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 border rounded p-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                       required={i < 2}
                     />
                     {i >= 2 && (
@@ -284,7 +284,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
               <button
                 type="button"
                 onClick={() => setPollOptions([...pollOptions, ''])}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-amber-600 hover:text-amber-700 font-medium"
               >
                 + Add option
               </button>
@@ -295,7 +295,7 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
         <button
           type="submit"
           disabled={loading || (type === 'IMAGE' && imagePreviewError)}
-          className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
+          className="w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors"
         >
           {loading ? 'Sending...' : 'Send Message'}
         </button>

@@ -68,7 +68,7 @@ export default function ChannelList() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
         <p className="text-gray-500 mt-4">Loading channels...</p>
       </div>
     );
@@ -110,7 +110,7 @@ export default function ChannelList() {
     <div>
       <Link
         href="/"
-        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors dark:bg-gray-700"
       >
         ← Back to Home
       </Link>

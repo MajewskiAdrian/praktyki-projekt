@@ -40,7 +40,7 @@ export default async function ChannelPage({
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold text-red-600">Channel not found</h1>
-          <Link href="/channels" className="text-blue-600 hover:underline mt-4 inline-block">
+          <Link href="/channels" className="text-amber-600 hover:underline mt-4 inline-block">
             ← Back to channels
           </Link>
         </div>
@@ -101,7 +101,7 @@ export default async function ChannelPage({
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl">
+              <div className="w-16 h-16 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-2xl">
                 {channel.title.charAt(0).toUpperCase()}
               </div>
             )}
@@ -137,7 +137,7 @@ export default async function ChannelPage({
               </span>
             )}
             {memberRole === 'MODERATOR' && (
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
                 🛡️ Moderator
               </span>
             )}
@@ -152,11 +152,11 @@ export default async function ChannelPage({
 
       {/* Content based on membership */}
       {!userId ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <p className="text-blue-800 mb-4">Please log in to follow this channel and see messages</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+          <p className="text-amber-800 mb-4">Please log in to follow this channel and see messages</p>
           <a 
             href="/login" 
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            className="inline-block bg-amber-600 text-white px-6 py-2 rounded hover:bg-amber-700"
           >
             Log In
           </a>

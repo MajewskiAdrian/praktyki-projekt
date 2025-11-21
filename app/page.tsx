@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import EventsList from "./components/EventsList";
 import CircleMenu from "./components/CircleMenu";
 import { useState, useCallback } from "react";
@@ -46,7 +47,12 @@ export default function Home() {
   return (
     <main className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
       <header className="bg-gray-300 dark:bg-gray-800 flex justify-between items-center px-6 py-4 mb-6 rounded-b-sm relative z-50">
-        <div className="text-black dark:text-white font-semibold m-0">Venn</div>
+        <Image
+          src="/logo.png"
+          alt="Venn Logo"
+          width={100}
+          height={40}
+        />
         <CircleMenu />
       </header>
 
