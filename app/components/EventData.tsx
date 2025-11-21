@@ -38,12 +38,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
 
     const fetchEventData = async () => {
       try {
-        // Fetch location name in parallel
-        const locationPromise = fetch(
-          `/api/reverse-geocode?lat=${event.latitude}&lng=${event.longitude}`
-        )
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => data?.label || null);
+        
 
         // Pobierz attendees
         const attendeesRes = await fetch(`/api/events/${event.id}/attendees`, {
@@ -62,7 +57,11 @@ export default function EventData({ event, onClose }: EventDataProps) {
         setAttendees(attendeesList);
 
         // Set location after fetching other data
-        const resolvedLocationName = await locationPromise;
+        const resolvedLocationName = [event.city, event.neighborhood, event.address]
+          .filter((p) => p != null && String(p).trim() !== "")
+          .map(String)
+          .join(", ");
+
         setLocationName(
           resolvedLocationName || `${event.latitude}, ${event.longitude}`
         );

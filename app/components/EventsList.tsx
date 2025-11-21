@@ -37,18 +37,6 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const fetchLocation = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const response = await fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`);
-      if (!response.ok) return "";
-      const data = await response.json();
-      return data.city || "";
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      return "";
-    }
-  };
-
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -61,36 +49,31 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
         }
         return res.json();
       })
-      .then(async (data: any[]) => {
-        const normalizedEvents: Event[] = data.map((event) => ({
-          ...event,
-          tags: Array.isArray(event.tags)
+      .then((data: any[]) => {
+        const normalizedEvents: Event[] = data.map((event) => {
+          const tags = Array.isArray(event.tags)
             ? event.tags.map((tag: any) => {
                 if (typeof tag === 'object' && tag !== null) {
                   return tag.name || tag.id?.toString() || '';
                 }
                 return String(tag);
               }).filter((tag: string) => tag.trim() !== '')
-            : [],
-          location: undefined,
-          locationLoading: true
-        }));
-        
+            : [];
+
+          // take location from DB fields (city, neighborhood, address) instead of reverse-geocoding
+          const location =
+            event.city || event.neighborhood || event.address || undefined;
+
+          return {
+            ...event,
+            tags,
+            location,
+            locationLoading: false,
+          };
+        });
+
         setEvents(normalizedEvents);
         setLoading(false);
-
-        // Pobieraj lokalizacje sekwencyjnie od góry do dołu
-        for (const event of normalizedEvents) {
-          const location = await fetchLocation(event.latitude, event.longitude);
-          
-          setEvents(prevEvents => 
-            prevEvents.map(e => 
-              e.id === event.id 
-                ? { ...e, location, locationLoading: false } 
-                : e
-            )
-          );
-        }
 
         const tags = new Set<string>();
         normalizedEvents.forEach((event) => {
@@ -192,10 +175,8 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
           <li
             key={event.id}
             onClick={() => {
-              if (!event.locationLoading) {
-                setSelectedEvent(event);
-                onEventClick(event);
-              }
+              setSelectedEvent(event);
+              onEventClick(event);
             }}
             className={`bg-white dark:bg-gray-700 p-4 rounded shadow transition-all
               ${event.locationLoading 
