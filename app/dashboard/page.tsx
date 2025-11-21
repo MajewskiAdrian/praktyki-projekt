@@ -25,9 +25,10 @@ interface EventItem {
 
 interface Channel {
   id: string;
-  name: string;
+  title: string;
   description: string;
   createdAt: string;
+  avatarUrl?: string; // Dodaj pole
 }
 
 // rozszerzony typ lokalny z informacją skąd event pochodzi
@@ -217,11 +218,33 @@ export default function DashboardPage() {
         href={`/channels/${channel.id}`}
         className="block p-4 mb-2 rounded-md shadow-md bg-white dark:bg-purple-900/40 border-2 border-purple-200/30 hover:bg-purple-50 dark:hover:bg-purple-900/60 transition"
       >
-        <h3 className="font-semibold text-lg">{channel.name}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300">{channel.description}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          Created: {new Date(channel.createdAt).toLocaleDateString()}
-        </p>
+        <div className="flex items-start space-x-3">
+          {/* Avatar kanału */}
+          <div className="flex-shrink-0">
+            {channel.avatarUrl ? (
+              <img
+                src={channel.avatarUrl}
+                alt={channel.title}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-purple-500 dark:bg-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                {channel.title.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          
+          {/* Informacje o kanale */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg truncate">{channel.title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+              {channel.description}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Created: {new Date(channel.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
       </Link>
     ));
   };

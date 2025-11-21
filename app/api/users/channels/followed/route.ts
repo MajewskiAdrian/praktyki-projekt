@@ -1,60 +1,53 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTokenFromReq, verifyToken } from "@/lib/auth";
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-
-    // Użyj 'token' zamiast 'session_token'
-    const sessionToken = cookieStore.get("token")?.value;
-    console.log("Session token found:", !!sessionToken);
-
-    if (!sessionToken) {
-      console.log("ERROR: No session token");
+    const token = getTokenFromReq(req);
+    if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = await prisma.session.findUnique({
-      where: { sessionToken },
-      include: { user: true },
-    });
-
-    console.log("Session found:", !!session);
-    console.log("User ID:", session?.userId);
-
-    if (!session || !session.user) {
-      console.log("ERROR: Invalid session");
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    const decoded = verifyToken(token);
+    if (!decoded?.id) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Pobierz kanały przez relację members
-    const channels = await prisma.channel.findMany({
+    // Najpierw znajdź wszystkie członkostwa usera
+    const memberships = await prisma.channelMember.findMany({
       where: {
-        members: {
-          some: {
-            userId: session.userId,
+        userId: decoded.id,
+      },
+      include: {
+        channel: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            avatarUrl: true, // Dodaj avatarUrl (lub jak się nazywa pole w Twojej bazie)
           },
         },
       },
       orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        createdAt: true,
+        joinedAt: "desc",
       },
     });
 
-    console.log("Channels found:", channels.length);
+    // Zwróć tylko kanały
+    const channels = memberships.map((m) => m.channel);
+
+    console.log("Channels found for user", decoded.id, ":", channels.length);
 
     return NextResponse.json({ followedChannels: channels });
   } catch (error) {
     console.error("Error fetching followed channels:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

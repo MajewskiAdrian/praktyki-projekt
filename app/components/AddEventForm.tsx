@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EventTags from "./EventTags";
 import { MyEvent } from "../types";
 
@@ -20,13 +20,44 @@ export default function AddEventForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // hidden address states (prefilled from reverse-geocode)
+  const [address, setAddress] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(null);
+  const [neighborhood, setNeighborhood] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lat == null || lng == null) return;
+    const ac = new AbortController();
+
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          lat: String(lat),
+          lng: String(lng),
+        });
+        const res = await fetch(`/api/reverse-geocode?${params.toString()}`, {
+          signal: ac.signal,
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        setAddress(json.label || null);
+        setCity(json.city || null);
+        setNeighborhood(json.suburb || null);
+      } catch {
+        // ignore errors (keep nulls)
+      }
+    })();
+
+    return () => ac.abort();
+  }, [lat, lng]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      console.log("📤 Sending data:", {
+      const payload = {
         title,
         description,
         latitude: lat,
@@ -34,21 +65,18 @@ export default function AddEventForm({
         eventDate,
         maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
         tagIds: selectedTags,
-      });
+        address,
+        city,
+        neighborhood,
+      };
+
+      console.log("📤 Sending data:", payload);
 
       const response = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          title,
-          description,
-          latitude: lat,
-          longitude: lng,
-          eventDate,
-          maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
-          tagIds: selectedTags,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -71,6 +99,9 @@ export default function AddEventForm({
       setEventDate("");
       setMaxAttendees("");
       setSelectedTags([]);
+      setAddress(null);
+      setCity(null);
+      setNeighborhood(null);
 
       if (onEventAdded) onEventAdded(data);
     } catch (err: any) {

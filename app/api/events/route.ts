@@ -58,6 +58,10 @@ export async function POST(req: Request) {
         eventDate: new Date(body.eventDate),
         creatorId,
         maxAttendees: body.maxAttendees ?? undefined,
+        // save optional address fields coming from reverse-geocode
+        address: body.address ?? null,
+        neighborhood: body.neighborhood ?? null,
+        city: body.city ?? null,
         tags: body.tagIds?.length
           ? ({ connect: body.tagIds.map((id: number) => ({ id })) } as any)
           : undefined,
