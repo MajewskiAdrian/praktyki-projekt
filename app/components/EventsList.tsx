@@ -4,6 +4,7 @@ import EventData from "./EventData";
 import ListSort from "./ListSort";
 import ListFilter from "./ListFilter";
 import SearchBar from "./Searchbar";
+import DateRangeFilter from "./DateRangeFilter";
 
 export interface Event {
   id: number;
@@ -30,6 +31,8 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
   const [searchText, setSearchText] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -92,6 +95,18 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
       );
     }
 
+    // Filtrowanie po przedziale dat
+    if (startDate) {
+      result = result.filter(
+        (event) => new Date(event.eventDate) >= new Date(startDate)
+      );
+    }
+    if (endDate) {
+      result = result.filter(
+        (event) => new Date(event.eventDate) <= new Date(endDate + "T23:59:59")
+      );
+    }
+
     // Filtrowanie po tagach
     if (selectedTags.length > 0) {
       result = result.filter((event) =>
@@ -107,7 +122,7 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
     }
 
     setFilteredEvents(result);
-  }, [events, sortBy, searchText, selectedTags]);
+  }, [events, sortBy, searchText, selectedTags, startDate, endDate]);
 
   if (loading) return <p className="p-4">Loading events...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
@@ -117,6 +132,12 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
       {/* KONTROLKI */}
       <div className={`p-4 space-y-2 border-b dark:border-gray-700 ${selectedEvent ? "blur-sm pointer-events-none" : ""}`}>
         <SearchBar searchText={searchText} setSearchText={setSearchText} />
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+        />
         <ListFilter
           availableTags={availableTags}
           selectedTags={selectedTags}
