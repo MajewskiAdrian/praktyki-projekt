@@ -83,6 +83,15 @@ interface MyEvent {
   latitude: number;
   longitude: number;
   eventDate: string;
+  // add creator to match Prisma include in API
+  creator?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  attendees?: { id: string }[];
+  isAttending?: boolean;
 }
 
 interface MapProps {
@@ -149,175 +158,192 @@ export default function Map({
       .catch((err) => console.error("Failed to load events:", err));
   };
 
-  const handleEventAdded = (newEvent: MyEvent) => {
-    loadEvents(); // załaduj wszystkie eventy
-    setMarkerPosition(null);
-    if (onEventAdded) onEventAdded(newEvent); // przekaż nowy event do parenta
-  };
+  // Pobierz profil użytkownika dsaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    loadEvents();
+    fetch("/api/users/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) setProfile(data.user);
+      })
+      .catch((err) => console.error("Failed to fetch profile:", err));
   }, []);
+ 
+ 
+    const handleEventAdded = (newEvent: MyEvent) => {
+      loadEvents(); // załaduj wszystkie eventy
+      setMarkerPosition(null);
+      if (onEventAdded) onEventAdded(newEvent); // przekaż nowy event do parenta
+    };
 
-  // Focus na evencie gdy focusedEventId się zmieni
-  useEffect(() => {
-    if (focusedEventId) {
-      const event = events.find((e) => e.id === focusedEventId);
-      if (event) {
-        setCenterLocation([event.latitude, event.longitude]);
+    useEffect(() => {
+      loadEvents();
+    }, []);
 
-        setTimeout(() => {
-          const marker = markerRefs.current[focusedEventId];
-          if (marker) {
-            marker.openPopup();
-          }
-        }, 1600);
-      }
-    }
-  }, [focusedEventId, events]);
+    // Focus na evencie gdy focusedEventId się zmieni
+    useEffect(() => {
+      if (focusedEventId) {
+        const event = events.find((e) => e.id === focusedEventId);
+        if (event) {
+          setCenterLocation([event.latitude, event.longitude]);
 
-  // Obsługa wyszukiwania lokalizacji
-  useEffect(() => {
-    if (searchLocation) {
-      setCenterLocation([searchLocation.lat, searchLocation.lng]);
-      setMarkerPosition([searchLocation.lat, searchLocation.lng]);
-    }
-  }, [searchLocation]);
-
-  // Komponent do obsługi kliknięć na mapie
-  function LocationPicker({
-    onSelect,
-  }: {
-    onSelect: (lat: number, lng: number) => void;
-  }) {
-    useMapEvents({
-      click(e) {
-        const { lat, lng } = e.latlng;
-        onSelect(lat, lng);
-      },
-    });
-
-    return null;
-  }
-
-  useEffect(() => {
-    if (markerRef.current) {
-      markerRef.current.openPopup();
-    }
-  }, [markerPosition]);
-
-  if (!mounted) return <div className="w-full h-full rounded-lg z-0" />;
-
-  return (
-    <div className="relative w-full h-full">
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
-        <LocationSearch
-          onSelectLocation={(loc) => {
-            if (onLocationSearch) {
-              onLocationSearch(loc);
+          setTimeout(() => {
+            const marker = markerRefs.current[focusedEventId];
+            if (marker) {
+              marker.openPopup();
             }
-          }}
-        />
-      </div>
-      <MapContainer
-        center={[54.352, 18.6466]}
-        zoom={11}
-        scrollWheelZoom={true}
-        className="w-full h-full rounded-lg z-0"
-        style={{
-          filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-        }}
-        minZoom={3}
-        maxBounds={[
-          [85, -180],
-          [-85, 180],
-        ]}
-        maxBoundsViscosity={0.8}
-      >
-        <MapController center={centerLocation} />
-        <ResizeRevalidator />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        />
-        <LocationPicker
-          onSelect={(lat, lng) => {
-            setMarkerPosition([lat, lng]);
-          }}
-        />
-        {markerPosition && (
-          <Marker
-            position={markerPosition}
-            ref={markerRef}
-            eventHandlers={{
-              add: (e) => {
-                e.target.openPopup();
-              },
-            }}
-            icon={customIcon}
-          >
-            <Popup>
-              <div
-                style={{
-                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                }}
-              >
-                <AddEventForm
-                  lat={markerPosition[0]}
-                  lng={markerPosition[1]}
-                  onEventAdded={handleEventAdded}
-                />
-              </div>
-            </Popup>
-          </Marker>
-        )}
+          }, 1600);
+        }
+      }
+    }, [focusedEventId, events]);
 
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            position={[event.latitude, event.longitude]}
-            ref={(ref) => {
-              if (ref) {
-                markerRefs.current[event.id] = ref;
+    // Obsługa wyszukiwania lokalizacji
+    useEffect(() => {
+      if (searchLocation) {
+        setCenterLocation([searchLocation.lat, searchLocation.lng]);
+        setMarkerPosition([searchLocation.lat, searchLocation.lng]);
+      }
+    }, [searchLocation]);
+
+    // Komponent do obsługi kliknięć na mapie
+    function LocationPicker({
+      onSelect,
+    }: {
+      onSelect: (lat: number, lng: number) => void;
+    }) {
+      useMapEvents({
+        click(e) {
+          const { lat, lng } = e.latlng;
+          onSelect(lat, lng);
+        },
+      });
+
+      return null;
+    }
+
+    useEffect(() => {
+      if (markerRef.current) {
+        markerRef.current.openPopup();
+      }
+    }, [markerPosition]);
+
+    if (!mounted) return <div className="w-full h-full rounded-lg z-0" />;
+
+    return (
+      <div className="relative w-full h-full">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
+          <LocationSearch
+            onSelectLocation={(loc) => {
+              if (onLocationSearch) {
+                onLocationSearch(loc);
               }
             }}
-            icon={
-              focusedEventId === event.id ? customIconJoined : customIcon
-            }
-          >
-            <Popup>
-              <div
-                style={{
-                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                }}
-                className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
-              >
-                <strong>{event.title}</strong>
-                <br />
-
-                <button
-                  onClick={() => onEventClick(event)}
-                  className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
+          />
+        </div>
+        <MapContainer
+          center={[54.352, 18.6466]}
+          zoom={11}
+          scrollWheelZoom={true}
+          className="w-full h-full rounded-lg z-0"
+          style={{
+            filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+          }}
+          minZoom={3}
+          maxBounds={[
+            [85, -180],
+            [-85, 180],
+          ]}
+          maxBoundsViscosity={0.8}
+        >
+          <MapController center={centerLocation} />
+          <ResizeRevalidator />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          />
+          <LocationPicker
+            onSelect={(lat, lng) => {
+              setMarkerPosition([lat, lng]);
+            }}
+          />
+          {markerPosition && (
+            <Marker
+              position={markerPosition}
+              ref={markerRef}
+              eventHandlers={{
+                add: (e) => {
+                  e.target.openPopup();
+                },
+              }}
+              icon={customIcon}
+            >
+              <Popup>
+                <div
+                  style={{
+                    filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                    zIndex: 1000,
+                  }}
                 >
-                  Details
-                </button>
+                  <AddEventForm
+                    lat={markerPosition[0]}
+                    lng={markerPosition[1]}
+                    onEventAdded={handleEventAdded}
+                  />
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
-                <br />
-                <small>
-                  {event.eventDate &&
-                    new Date(event.eventDate).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                </small>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
-  );
-}
+          {events.map((event) => (
+            <Marker
+              key={event.id}
+              position={[event.latitude, event.longitude]}
+              ref={(ref) => {
+                if (ref) {
+                  markerRefs.current[event.id] = ref;
+                }
+              }}
+              icon={
+                (event.isAttending || (profile?.id && profile?.id === event.creator?.id))
+                  ? customIconJoined
+                  : customIcon
+              }
+
+            >
+              <Popup>
+                <div
+                  style={{
+                    filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                  }}
+                  className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+                >
+                  <strong>{event.title}</strong>
+                  <br />
+
+                  <button
+                    onClick={() => onEventClick(event)}
+                    className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
+                  >
+                    Details
+                  </button>
+
+                  <br />
+                  <small>
+                    {event.eventDate &&
+                      new Date(event.eventDate).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </small>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+    );
+  }

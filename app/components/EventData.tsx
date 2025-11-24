@@ -34,95 +34,79 @@ export default function EventData({ event, onClose }: EventDataProps) {
   }).filter(tag => tag.trim() !== '') || [];
 
   useEffect(() => {
-    setIsLoading(true);
-
     const fetchEventData = async () => {
+      setIsLoading(true);
       try {
-        
+        // Jeśli nie mamy ID, przerwij (zapobiegnie błędowi na serwerze)
+        let attendeesList: any[] = [];
+        if (event?.id == null) {
+          console.warn("EventData: event.id is missing, skipping fetch");
+          setAttendees([]);
+        } else {
+          // Pobierz attendees
+          const attendeesRes = await fetch(
+            `/api/events/${encodeURIComponent(String(event.id))}/attendees`,
+            { credentials: "include" }
+          );
 
-        // Pobierz attendees
-        const attendeesRes = await fetch(`/api/events/${event.id}/attendees`, {
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        if (!attendeesRes.ok) {
-          throw new Error("Failed to fetch attendees");
+          if (attendeesRes.ok) {
+            const attendeesData = await attendeesRes.json();
+            attendeesList = attendeesData.attendees || [];
+            setAttendees(attendeesList);
+          } else {
+            console.error("Failed to fetch attendees:", await attendeesRes.text());
+            setAttendees([]);
+          }
         }
 
-        const attendeesData = await attendeesRes.json();
-        const attendeesList = attendeesData.attendees || [];
-
-        console.log("📋 Attendees list:", attendeesList);
-        setAttendees(attendeesList);
-
-        // Set location after fetching other data
-        const resolvedLocationName = [event.city, event.neighborhood, event.address]
-          .filter((p) => p != null && String(p).trim() !== "")
-          .map(String)
-          .join(", ");
-
-        setLocationName(
-          resolvedLocationName || `${event.latitude}, ${event.longitude}`
-        );
-
-        // Sprawdź czy użytkownik jest w liście attendees
+        // Pobierz profil użytkownika (zamiast /api/dashboard)
         const userRes = await fetch("/api/users/profile", {
-          cache: "no-store",
           credentials: "include",
         });
 
         if (userRes.ok) {
           const userData = await userRes.json();
-          console.log("👤 User data:", userData);
-
           const userId = userData.user?.id;
-          console.log("🔍 User ID:", userId, typeof userId);
 
-          if (!userId) {
-            console.error("❌ User ID not found!");
-            setIsUserJoined(false);
-            setIsCreator(false);
-            return;
-          }
-
-          // Sprawdź czy aktualny użytkownik to creator eventu
-          const userIdStr = String(userId);
-          const creatorIdStr = String(event.creator?.id || "");
-          const amCreator = userIdStr === creatorIdStr;
-          console.log("🔑 Is creator:", amCreator);
-          setIsCreator(amCreator);
-
-          // Sprawdź czy user jest w attendees
-          const isJoined = attendeesList.some((attendee: any) => {
-            const attendeeId = String(attendee.id);
-            const userIdStr = String(userId);
-            console.log(
-              `Comparing: "${attendeeId}" === "${userIdStr}"`,
-              attendeeId === userIdStr
+          if (userId) {
+            setIsCreator(String(event.creator?.id) === String(userId));
+            setIsUserJoined(
+              attendeesList.some((a: any) => String(a.id) === String(userId)) || false
             );
-            return attendeeId === userIdStr;
-          });
-
-          console.log("✅ Is user joined:", isJoined);
-          setIsUserJoined(isJoined);
+          }
         } else {
-          console.error("❌ Failed to fetch user profile");
           setIsUserJoined(false);
           setIsCreator(false);
+        }
+
+        // Pobierz nazwę lokalizacji jeśli są współrzędne
+        if (event.latitude != null && event.longitude != null) {
+          const geocodeRes = await fetch(
+            `/api/reverse-geocode?lat=${event.latitude}&lng=${event.longitude}`
+          );
+          if (geocodeRes.ok) {
+            const geocodeData = await geocodeRes.json();
+            setLocationName(geocodeData.name || geocodeData.label || null);
+          } else {
+            // fallback to DB fields or coords
+            setLocationName(
+              [event.city, event.neighborhood, event.address]
+                .filter((p) => p != null && String(p).trim() !== "")
+                .map(String)
+                .join(", ") || `${event.latitude}, ${event.longitude}`
+            );
+          }
         }
       } catch (error) {
         console.error("Error fetching event data:", error);
         setAttendees([]);
-        setIsUserJoined(false);
-        setLocationName(`${event.latitude}, ${event.longitude}`);
       } finally {
-        setTimeout(() => setIsLoading(false), 300);
+        setIsLoading(false);
       }
     };
 
     fetchEventData();
-  }, [event.id, event.latitude, event.longitude]);
+  }, [event.id, event.latitude, event.longitude, event.creator?.id]);
 
   const handleJoinStatusChange = async (joined: boolean) => {
     console.log("🔄 Status changed to:", joined);
@@ -202,7 +186,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
             <div className="flex items-center gap-3">
               {event.creator?.avatarUrl ? (
                 <img
-                  src={event.creator.avatarUrl}
+                  src={event.creator.avatarUrl.startsWith('/') ? event.creator.avatarUrl : `/${event.creator.avatarUrl}`}
                   alt={event.creator?.name || "Author avatar"}
                   className="h-8 w-8 rounded-full object-cover"
                 />
@@ -247,11 +231,15 @@ export default function EventData({ event, onClose }: EventDataProps) {
               })}
             </p>
           </div>
-          <div className="flex-1 min-h-0">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
+              Attendees ({attendees.length}{event.maxAttendees ? `/${event.maxAttendees}` : ''})
+            </h4>
             <EventAttendees
-              eventId={String(event.id)}
+                eventId={String(event.id)}
               initialAttendees={attendees}
-              maxAttendees={event.maxAttendees}
+              onAttendeesUpdate={setAttendees}
+              maxAttendees={event.maxAttendees ?? undefined}
             />
           </div>
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700 shrink-0">

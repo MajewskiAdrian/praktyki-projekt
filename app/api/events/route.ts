@@ -2,14 +2,42 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    // try to extract user id from cookie token if present
+    const cookieHeader = (req.headers.get("cookie") || "");
+    const tokenCookie = cookieHeader.split("; ").find((c) => c.startsWith("token="));
+    const tokenValue = tokenCookie?.split("=")[1] || null;
+
+    let userId: string | null = null;
+    const secret = process.env.JWT_SECRET;
+    if (tokenValue && secret) {
+      try {
+        const decoded = jwt.verify(tokenValue, secret) as any;
+        userId = decoded?.id || decoded?.userId || null;
+      } catch (e) {
+        // invalid token, ignore — we'll just return events without isAttending
+        console.warn("Invalid token in GET /api/events");
+      }
+    }
+
     const events = await prisma.event.findMany({
       orderBy: { eventDate: "desc" },
-      include: { creator: {select: {id: true, name: true, email: true} }, tags: true }, // pobieramy też creator
+      include: {
+        creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        tags: true,
+        attendees: { select: { id: true } },
+      }, // pobieramy też creator, tags i attendees (tylko id)
     });
-    console.log("🔹 Events fetched:", events);
-    return NextResponse.json(events);
+
+    // add isAttending flag for current user if we have userId
+    const eventsWithFlag = events.map((e) => ({
+      ...e,
+      isAttending: !!userId && e.attendees?.some((a: any) => String(a.id) === String(userId)),
+    }));
+
+    console.log("🔹 Events fetched:", eventsWithFlag);
+    return NextResponse.json(eventsWithFlag);
   } catch (err: any) {
     console.error("❌ Error in GET /api/events:", err);
     return NextResponse.json({ error: "Server error", details: String(err) }, { status: 500 });

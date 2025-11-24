@@ -22,14 +22,18 @@ export async function GET(req: NextRequest) {
     const decoded = verifyToken(token);
     if (!decoded?.id) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
+    const userId = decoded.id;
+
+    // Znajdź część, gdzie pobierasz użytkownika z bazy
     const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
         email: true,
         trueName: true,
         bio: true,
+        avatarUrl: true, // <--- UPEWNIJ SIĘ, ŻE TO POLE JEST TUTAJ
       },
     });
 

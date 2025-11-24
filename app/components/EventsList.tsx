@@ -13,9 +13,15 @@ export interface Event {
   latitude: number;
   longitude: number;
   eventDate: string;
-  tags?: string[];
+  tags?: any[]; // normalized to string[] later
   location?: string;
   locationLoading?: boolean;
+  // optional additional fields from API
+  creator?: { id: string; name?: string; email?: string; avatarUrl?: string } | null;
+  maxAttendees?: number | null;
+  address?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
 }
 
 interface EventsListProps {

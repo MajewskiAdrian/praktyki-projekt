@@ -20,6 +20,10 @@ interface EventItem {
   maxAttendees: number;
   latitude: number;
   longitude: number;
+  // optional address fields from DB
+  address?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
   createdAt: string;
 }
 
@@ -99,14 +103,14 @@ export default function DashboardPage() {
     events.forEach((event) => {
       if (locationNames[event.id]) return;
 
-      fetch(`/api/reverse-geocode?lat=${event.latitude}&lng=${event.longitude}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.label) {
-            setLocationNames((prev) => ({ ...prev, [event.id]: data.label }));
-          }
-        })
-        .catch((err) => console.error("Failed to fetch location:", err));
+      // Build label from DB fields if present, otherwise fallback to coords
+      const parts: string[] = [];
+      if (event.address && event.address.trim()) parts.push(event.address.trim());
+      if (event.neighborhood && event.neighborhood.trim()) parts.push(event.neighborhood.trim());
+      if (event.city && event.city.trim()) parts.push(event.city.trim());
+
+      const label = parts.length > 0 ? parts.join(", ") : `${event.latitude}, ${event.longitude}`;
+      setLocationNames((prev) => ({ ...prev, [event.id]: label }));
     });
   };
 

@@ -36,11 +36,20 @@ export default function ProfileForm() {
         if (!res.ok) throw new Error(json?.error || "Error loading profile");
         const user: UserDto = json.user;
         if (!active) return;
-        setInitial(user);
+
+        console.log("🔍 Raw avatarUrl from API:", user.avatarUrl); // DODAJ TO
+
+        const fullAvatarUrl = user.avatarUrl 
+          ? (user.avatarUrl.startsWith('/') ? user.avatarUrl : `/${user.avatarUrl}`)
+          : null;
+
+        console.log("✅ Final avatarUrl:", fullAvatarUrl); // I TO
+
+        setInitial({ ...user, avatarUrl: fullAvatarUrl });
         setUsername(user.name || "");
         setRealName(user.trueName || "");
         setBio(user.bio || "");
-        setAvatarPreview(user.avatarUrl || null);
+        setAvatarPreview(fullAvatarUrl);
       } catch (e: any) {
         if (active) setError(e.message);
       } finally {
@@ -93,11 +102,15 @@ export default function ProfileForm() {
       if (!res.ok) throw new Error(json?.error || "Failed to save profile");
       const updated = json.user;
       
-      setInitial(updated);
+      const fullAvatarUrl = updated.avatarUrl
+        ? (updated.avatarUrl.startsWith('/') ? updated.avatarUrl : `/${updated.avatarUrl}`)
+        : null;
+
+      setInitial({ ...updated, avatarUrl: fullAvatarUrl });
       setUsername(updated.name || "");
       setRealName(updated.trueName || "");
       setBio(updated.bio || "");
-      setAvatarPreview(updated.avatarUrl || null);
+      setAvatarPreview(fullAvatarUrl);
       setAvatarFile(null);
       setRemoveAvatar(false);
       setOk(true);
