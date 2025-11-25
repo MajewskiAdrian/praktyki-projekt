@@ -2,8 +2,32 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 
+// Funkcja pomocnicza do usuwania starych eventów
+async function cleanupOldEvents() {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const deletedEvents = await prisma.event.deleteMany({
+      where: {
+        eventDate: {
+          lt: twentyFourHoursAgo,
+        },
+      },
+    });
+
+    if (deletedEvents.count > 0) {
+      console.log(`🗑️ Cleaned up ${deletedEvents.count} old events`);
+    }
+  } catch (error) {
+    console.error("❌ Error cleaning up old events:", error);
+  }
+}
+
 export async function GET(req: Request) {
   try {
+    // Automatyczne czyszczenie starych eventów
+    await cleanupOldEvents();
+
     // try to extract user id from cookie token if present
     const cookieHeader = (req.headers.get("cookie") || "");
     const tokenCookie = cookieHeader.split("; ").find((c) => c.startsWith("token="));
@@ -60,6 +84,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields", fields: missing }, { status: 400 });
     }
 
+    // Sprawdź czy data eventu nie jest w przeszłości
+    const eventDate = new Date(body.eventDate);
+    const now = new Date();
+    
+    if (eventDate < now) {
+      return NextResponse.json(
+        { error: "Event date cannot be in the past" },
+        { status: 400 }
+      );
+    }
+
     const cookieHeader = req.headers.get("cookie") || "";
     const tokenCookie = cookieHeader.split("; ").find((c) => c.startsWith("token="));
     const tokenValue = tokenCookie?.split("=")[1];
@@ -83,7 +118,7 @@ export async function POST(req: Request) {
         description: body.description,
         latitude: body.latitude,
         longitude: body.longitude,
-        eventDate: new Date(body.eventDate),
+        eventDate: eventDate,
         creatorId,
         maxAttendees: body.maxAttendees ?? undefined,
         // save optional address fields coming from reverse-geocode

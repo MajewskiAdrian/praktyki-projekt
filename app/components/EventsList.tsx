@@ -5,6 +5,7 @@ import ListSort from "./ListSort";
 import ListFilter from "./ListFilter";
 import SearchBar from "./Searchbar";
 import DateRangeFilter from "./DateRangeFilter";
+import EventListSkeleton from "./EventListSkeleton";
 
 export interface Event {
   id: number;
@@ -142,7 +143,7 @@ export default function EventsList({ onEventClick, selectedEvent, setSelectedEve
     setFilteredEvents(result);
   }, [events, sortBy, searchText, searchType, selectedTags, startDate, endDate]);
 
-  if (loading) return <p className="p-4">Loading events...</p>;
+  if (loading) return <EventListSkeleton count={5} />;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (

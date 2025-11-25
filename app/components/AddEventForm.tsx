@@ -53,13 +53,28 @@ export default function AddEventForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    // Walidacja daty
+    const selectedDate = new Date(eventDate);
+    const now = new Date();
+
+    if (selectedDate < now) {
+      setError("Event date cannot be in the past");
+      return;
+    }
+
+    if (!title.trim() || !description.trim() || !eventDate || !address) {
+      setError("Please fill in all required fields and select a location");
+      return;
+    }
+
     setError("");
+    setLoading(true);
 
     try {
       const payload = {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         latitude: lat,
         longitude: lng,
         eventDate,
@@ -148,8 +163,9 @@ export default function AddEventForm({
           type="datetime-local"
           value={eventDate}
           onChange={(e) => setEventDate(e.target.value)}
+          min={new Date().toISOString().slice(0, 16)}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white"
           required
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
 

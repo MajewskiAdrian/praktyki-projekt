@@ -1,43 +1,42 @@
 "use client";
+
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type Props = {
-  className?: string;
-};
-
-export default function LogoutButton({ className }: Props) {
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+export default function LogoutButton() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
+    if (loading) return;
+    
+    setLoading(true);
     try {
-      setIsLoggingOut(true);
-      const res = await fetch("/api/logout", { method: "POST" });
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
-      if (!res.ok) {
+      if (res.ok) {
+        router.push("/login");
+        router.refresh();
+      } else {
         console.error("Logout failed");
-        setIsLoggingOut(false);
-        return;
       }
-
-      window.location.href = "/login";
     } catch (error) {
-      console.error("Error during logout:", error);
-      setIsLoggingOut(false);
+      console.error("Logout error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <button
-      type="button"
       onClick={handleLogout}
-      disabled={isLoggingOut}
-      className={
-        className ??
-        ""
-      }
-      aria-disabled={isLoggingOut}
+      disabled={loading}
+      className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
-      {isLoggingOut ? "Logging out..." : "Logout"}
+      {loading ? "Logging out..." : "Logout"}
     </button>
   );
 }

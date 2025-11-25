@@ -95,9 +95,9 @@ export default function CircleMenu() {
       ))}
 
       <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
-        <div className="px-4 py-2">
+        
           <LogoutButton />
-        </div>
+        
       </div>
     </div>
   ) : null;

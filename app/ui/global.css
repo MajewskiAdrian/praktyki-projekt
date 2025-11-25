@@ -29,6 +29,8 @@ html, body {
   }
 }
 
+
+
 /* Ukrycie scrollbara */
 body::-webkit-scrollbar {
   width: 0;
@@ -104,3 +106,49 @@ body::-webkit-scrollbar {
 [data-theme="dark"] {
   --accent: 139 92 246; /* inny RGB dla dark */
 }
+
+/* Skeleton / shimmer helpers */
+@layer utilities {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #e6e7eb; /* light gray */
+  }
+
+  .dark .skeleton {
+    background-color: #2f3033; /* darker gray for dark mode */
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    height: 100%;
+    width: 150%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+    transform: translateX(0);
+    animation: shimmer 1.2s infinite;
+  }
+
+  .skeleton-title { height: 18px; width: 60%; border-radius: 6px; }
+  .skeleton-desc { height: 12px; width: 90%; border-radius: 6px; }
+  .skeleton-line { height: 10px; width: 40%; border-radius: 6px; }
+  .skeleton-tags { height: 22px; width: 30%; border-radius: 9999px; }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(150%); }
+  }
+
+  .loader-pulse {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(0.995); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+}
+

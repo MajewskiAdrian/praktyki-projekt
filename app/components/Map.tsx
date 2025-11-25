@@ -34,6 +34,8 @@ const customIconJoined = L.icon({
   shadowSize: [41, 41],
 });
 
+
+
 function ResizeRevalidator() {
   const map = useMap();
   useEffect(() => {
@@ -169,6 +171,10 @@ export default function Map({
       })
       .catch((err) => console.error("Failed to fetch profile:", err));
   }, []);
+
+  
+
+  
  
  
     const handleEventAdded = (newEvent: MyEvent) => {

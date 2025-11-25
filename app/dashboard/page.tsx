@@ -316,6 +316,14 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        <div className="fixed bottom-4 right-4">
+          <Link
+            href="/channels?from=/dashboard"
+            className="rounded-full h-12 w-12 bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center transition-colors shadow-lg"
+          >
+            💬
+          </Link>
+        </div>
       </div>
     </>
   );

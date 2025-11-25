@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ChannelCard from './ChannelCard';
-import Link from 'next/link';
 
 interface Channel {
   id: string;
@@ -49,7 +48,6 @@ export default function ChannelList() {
 
       const data = await res.json();
       
-      // Sprawdź czy data jest tablicą
       if (Array.isArray(data)) {
         setChannels(data);
       } else {
@@ -63,6 +61,10 @@ export default function ChannelList() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    router.push('/dashboard');
   };
 
   if (loading) {
@@ -92,12 +94,12 @@ export default function ChannelList() {
   if (channels.length === 0) {
     return (
       <div>
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        <button
+          onClick={handleBack}
+          className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
         >
-          ← Back to Home
-        </Link>
+          ← Back to Dashboard
+        </button>
         <div className="text-center py-12 text-gray-500">
           <p className="text-xl mb-2">No channels yet</p>
           <p>Be the first to create one!</p>
@@ -108,12 +110,12 @@ export default function ChannelList() {
 
   return (
     <div>
-      <Link
-        href="/"
-        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors dark:bg-gray-700"
+      <button
+        onClick={handleBack}
+        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
       >
-        ← Back to Home
-      </Link>
+        ← Back to Dashboard
+      </button>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {channels.map((channel) => (
           <ChannelCard key={channel.id} channel={channel} />
