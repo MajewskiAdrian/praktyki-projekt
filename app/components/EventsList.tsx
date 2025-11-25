@@ -29,25 +29,44 @@ interface EventsListProps {
   selectedEvent: Event | null;
   setSelectedEvent: (event: Event | null) => void;
   filtersOnly?: boolean;
+  // Shared state props
+  searchText: string;
+  setSearchText: (text: string) => void;
+  searchType: "text" | "location";
+  setSearchType: (type: "text" | "location") => void;
+  sortBy: "date" | "title";
+  setSortBy: (sort: "date" | "title") => void;
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
+  startDate: string;
+  setStartDate: (date: string) => void;
+  endDate: string;
+  setEndDate: (date: string) => void;
 }
 
 export default function EventsList({ 
   onEventClick, 
   selectedEvent, 
   setSelectedEvent,
-  filtersOnly = false 
+  filtersOnly = false,
+  searchText,
+  setSearchText,
+  searchType,
+  setSearchType,
+  sortBy,
+  setSortBy,
+  selectedTags,
+  setSelectedTags,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate
 }: EventsListProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
-  const [searchText, setSearchText] = useState("");
-  const [searchType, setSearchType] = useState<"text" | "location">("text");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -150,6 +169,18 @@ export default function EventsList({
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Typ wyszukiwania
+            </label>
+            <SearchBar 
+              searchText={searchText}
+              setSearchText={setSearchText}
+              searchType={searchType}
+              setSearchType={setSearchType}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Sortuj według
             </label>
             <ListSort sortBy={sortBy} setSortBy={setSortBy} />
@@ -169,7 +200,9 @@ export default function EventsList({
 
           {availableTags.length > 0 && (
             <div>
-              
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Filtry tagów
+              </label>
               <ListFilter
                 availableTags={availableTags}
                 selectedTags={selectedTags}

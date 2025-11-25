@@ -28,6 +28,14 @@ export default function Home() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
+  // Shared filter state
+  const [searchText, setSearchText] = useState("");
+  const [searchType, setSearchType] = useState<"text" | "location">("text");
+  const [sortBy, setSortBy] = useState<"date" | "title">("date");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const handleEventAdded = (newEvent: MyEvent) => {
     setRefreshKey((prev) => prev + 1);
     setFocusedEventId(newEvent.id);
@@ -108,6 +116,8 @@ export default function Home() {
               <div className="relative">
                 <input
                   type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
                   placeholder="Wyszukaj..."
                   className="w-full px-4 py-2.5 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 />
@@ -119,6 +129,14 @@ export default function Home() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchText && (
+                  <button
+                    onClick={() => setSearchText("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
 
@@ -135,6 +153,18 @@ export default function Home() {
                   setSelectedEvent={setSelectedEvent}
                   onEventClick={handleEventClick}
                   filtersOnly={true}
+                  searchText={searchText}
+                  setSearchText={setSearchText}
+                  searchType={searchType}
+                  setSearchType={setSearchType}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  selectedTags={selectedTags}
+                  setSelectedTags={setSelectedTags}
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  endDate={endDate}
+                  setEndDate={setEndDate}
                 />
               </div>
             </div>
@@ -148,6 +178,18 @@ export default function Home() {
               setSelectedEvent={setSelectedEvent}
               onEventClick={handleEventClick}
               filtersOnly={false}
+              searchText={searchText}
+              setSearchText={setSearchText}
+              searchType={searchType}
+              setSearchType={setSearchType}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
             />
           </div>
         </aside>
