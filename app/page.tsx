@@ -4,6 +4,7 @@ import Image from "next/image";
 import EventsList, { MembershipFilter } from "./components/EventsList";
 import EventData from "./components/EventData";
 import CircleMenu from "./components/CircleMenu";
+import AddEventForm from "./components/AddEventForm";
 import { useState, useCallback } from "react";
 
 const Map = dynamic(() => import("./components/Map"), { ssr: false });
@@ -28,6 +29,7 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<MyEvent | null>(null);
   const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [createEventLocation, setCreateEventLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Shared filter state
   const [searchText, setSearchText] = useState("");
@@ -40,12 +42,13 @@ export default function Home() {
   const handleEventAdded = (newEvent: MyEvent) => {
     setRefreshKey((prev) => prev + 1);
     setFocusedEventId(newEvent.id);
+    setCreateEventLocation(null); // Zamknij formularz
   };
 
   const handleEventClick = useCallback((event: MyEvent) => {
-    // Set selected and focused event (no debug logs)
     setSelectedEvent(event);
     setFocusedEventId(event.id);
+    setCreateEventLocation(null); // Zamknij formularz przy kliknięciu w event
   }, []);
 
   const handleLocationSearch = useCallback(
@@ -55,6 +58,15 @@ export default function Home() {
     },
     []
   );
+
+  const handleCreateEventClick = useCallback((lat: number, lng: number) => {
+    setCreateEventLocation({ lat, lng });
+    setSelectedEvent(null); // Zamknij EventData
+  }, []);
+
+  const handleCloseCreateEvent = useCallback(() => {
+    setCreateEventLocation(null);
+  }, []);
 
   return (
     <main className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -76,6 +88,7 @@ export default function Home() {
             onLocationSearch={handleLocationSearch}
             searchLocation={searchLocation}
             onEventClick={handleEventClick}
+            onCreateEventClick={handleCreateEventClick}
           />
         </div>
 
@@ -173,13 +186,37 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Events List / Details */}
+          {/* Events List / Details / Create Form */}
           <div className="flex-1 overflow-hidden">
-            {selectedEvent ? (
+            {createEventLocation ? (
+              // Show create form
+              <div className="h-full overflow-y-auto">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Stwórz nowe wydarzenie</h2>
+                  <button
+                    onClick={handleCloseCreateEvent}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                  >
+                    <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-6">
+                  <AddEventForm
+                    lat={createEventLocation.lat}
+                    lng={createEventLocation.lng}
+                    onEventAdded={handleEventAdded}
+                  />
+                </div>
+              </div>
+            ) : selectedEvent ? (
+              // Show event details
               <div className="h-full">
                 <EventData event={selectedEvent as any} onClose={() => setSelectedEvent(null)} />
               </div>
             ) : (
+              // Show events list
               <EventsList
                 key={refreshKey}
                 selectedEvent={selectedEvent}

@@ -10,7 +10,6 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-import AddEventForm from "./AddEventForm";
 import LocationSearch from "./LocationSearch";
 
 // Własne ikony
@@ -35,7 +34,7 @@ const customIconJoined = L.icon({
 });
 
 const customIconCreated = L.icon({
-  iconUrl: "/pins/custom-marker-joined.png",
+  iconUrl: "/pins/custom-marker-created.png",
   iconRetinaUrl: "/pins/custom-marker-created.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
@@ -43,8 +42,6 @@ const customIconCreated = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
-
-
 
 function ResizeRevalidator() {
   const map = useMap();
@@ -95,7 +92,6 @@ interface MyEvent {
   latitude: number;
   longitude: number;
   eventDate: string;
-  // add creator to match Prisma include in API
   creator?: {
     id: string;
     name?: string | null;
@@ -111,7 +107,8 @@ interface MapProps {
   focusedEventId: number | null;
   searchLocation: { lat: number; lng: number } | null;
   onLocationSearch: (loc: { lat: number; lng: number }) => void;
-  onEventClick: (event: MyEvent) => void; // ← nowy typ
+  onEventClick: (event: MyEvent) => void;
+  onCreateEventClick: (lat: number, lng: number) => void;
 }
 
 export default function Map({
@@ -120,16 +117,13 @@ export default function Map({
   onLocationSearch,
   searchLocation,
   onEventClick,
+  onCreateEventClick,
 }: MapProps) {
   const [mounted, setMounted] = useState(false);
   const [events, setEvents] = useState<MyEvent[]>([]);
-  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(
-    null
-  );
+  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(
-    null
-  );
+  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const markerRefs = useRef<{ [key: number]: L.Marker }>({});
 
@@ -170,7 +164,6 @@ export default function Map({
       .catch((err) => console.error("Failed to load events:", err));
   };
 
-  // Pobierz profil użytkownika dsaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -182,195 +175,200 @@ export default function Map({
       .catch((err) => console.error("Failed to fetch profile:", err));
   }, []);
 
-  
+  const handleEventAdded = (newEvent: MyEvent) => {
+    loadEvents();
+    setMarkerPosition(null);
+    if (onEventAdded) onEventAdded(newEvent);
+  };
 
-  
- 
- 
-    const handleEventAdded = (newEvent: MyEvent) => {
-      loadEvents(); // załaduj wszystkie eventy
-      setMarkerPosition(null);
-      if (onEventAdded) onEventAdded(newEvent); // przekaż nowy event do parenta
-    };
+  useEffect(() => {
+    loadEvents();
+  }, []);
 
-    useEffect(() => {
-      loadEvents();
-    }, []);
+  useEffect(() => {
+    if (focusedEventId) {
+      const event = events.find((e) => e.id === focusedEventId);
+      if (event) {
+        setCenterLocation([event.latitude, event.longitude]);
 
-    // Focus na evencie gdy focusedEventId się zmieni
-    useEffect(() => {
-      if (focusedEventId) {
-        const event = events.find((e) => e.id === focusedEventId);
-        if (event) {
-          setCenterLocation([event.latitude, event.longitude]);
-
-          setTimeout(() => {
-            const marker = markerRefs.current[focusedEventId];
-            if (marker) {
-              marker.openPopup();
-            }
-          }, 1600);
-        }
+        setTimeout(() => {
+          const marker = markerRefs.current[focusedEventId];
+          if (marker) {
+            marker.openPopup();
+          }
+        }, 1600);
       }
-    }, [focusedEventId, events]);
-
-    // Obsługa wyszukiwania lokalizacji
-    useEffect(() => {
-      if (searchLocation) {
-        setCenterLocation([searchLocation.lat, searchLocation.lng]);
-        setMarkerPosition([searchLocation.lat, searchLocation.lng]);
-      }
-    }, [searchLocation]);
-
-    // Komponent do obsługi kliknięć na mapie
-    function LocationPicker({
-      onSelect,
-    }: {
-      onSelect: (lat: number, lng: number) => void;
-    }) {
-      useMapEvents({
-        click(e) {
-          const { lat, lng } = e.latlng;
-          onSelect(lat, lng);
-        },
-      });
-
-      return null;
     }
+  }, [focusedEventId, events]);
 
-    useEffect(() => {
-      if (markerRef.current) {
-        markerRef.current.openPopup();
-      }
-    }, [markerPosition]);
+  useEffect(() => {
+    if (searchLocation) {
+      setCenterLocation([searchLocation.lat, searchLocation.lng]);
+      setMarkerPosition([searchLocation.lat, searchLocation.lng]);
+    }
+  }, [searchLocation]);
 
-    if (!mounted) return <div className="w-full h-full rounded-lg z-0" />;
+  function LocationPicker({
+    onSelect,
+  }: {
+    onSelect: (lat: number, lng: number) => void;
+  }) {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        onSelect(lat, lng);
+      },
+    });
 
-    return (
-      <div className="relative w-full h-full">
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
-          <LocationSearch
-            onSelectLocation={(loc) => {
-              if (onLocationSearch) {
-                onLocationSearch(loc);
-              }
-            }}
-          />
-        </div>
-        <MapContainer
-          center={[54.352, 18.6466]}
-          zoom={11}
-          scrollWheelZoom={true}
-          className="w-full h-full rounded-lg z-0"
-          style={{
-            filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-          }}
-          minZoom={3}
-          maxBounds={[
-            [85, -180],
-            [-85, 180],
-          ]}
-          maxBoundsViscosity={0.8}
-        >
-          <MapController center={centerLocation} />
-          <ResizeRevalidator />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          />
-          <LocationPicker
-            onSelect={(lat, lng) => {
-              setMarkerPosition([lat, lng]);
-            }}
-          />
-          {markerPosition && (
-            <Marker
-              position={markerPosition}
-              ref={markerRef}
-              eventHandlers={{
-                add: (e) => {
-                  e.target.openPopup();
-                },
-              }}
-              icon={customIcon}
-            >
-              <Popup>
-                <div
-                  style={{
-                    filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                    zIndex: 1000,
-                  }}
-                >
-                  <AddEventForm
-                    lat={markerPosition[0]}
-                    lng={markerPosition[1]}
-                    onEventAdded={handleEventAdded}
-                  />
-                </div>
-              </Popup>
-            </Marker>
-          )}
-
-          {events.map((event) => (
-            <Marker
-              key={event.id}
-              position={[event.latitude, event.longitude]}
-              ref={(ref) => {
-                if (ref) {
-                  markerRefs.current[event.id] = ref;
-                }
-              }}
-              /* Intentionally no click handler here so clicking the marker only opens the popup.
-                 The Details action is performed by the button inside the popup. */
-              icon={
-                (event.isAttending || (profile?.id && profile?.id === event.creator?.id))
-                  ? customIconJoined
-                  : customIcon
-              }
-            >
-              <Popup>
-                <div
-                  style={{
-                    filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                  }}
-                  className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
-                >
-                  <strong>{event.title}</strong>
-                  <br />
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                        // prevent the click from bubbling to the map / marker
-                        e.stopPropagation();
-                        e.preventDefault();
-                        try {
-                          onEventClick(event);
-                        } catch (err) {
-                          // ignore errors from parent handler here to avoid breaking the map
-                        }
-                    }}
-                    className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
-                  >
-                    Details
-                  </button>
-
-                  <br />
-                  <small>
-                    {event.eventDate &&
-                      new Date(event.eventDate).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                  </small>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
-    );
+    return null;
   }
+
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.openPopup();
+    }
+  }, [markerPosition]);
+
+  if (!mounted) return <div className="w-full h-full rounded-lg z-0" />;
+
+  return (
+    <div className="relative w-full h-full">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
+        <LocationSearch
+          onSelectLocation={(loc) => {
+            if (onLocationSearch) {
+              onLocationSearch(loc);
+            }
+          }}
+        />
+      </div>
+      <MapContainer
+        center={[54.352, 18.6466]}
+        zoom={11}
+        scrollWheelZoom={true}
+        className="w-full h-full rounded-lg z-0"
+        style={{
+          filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+        }}
+        minZoom={3}
+        maxBounds={[
+          [85, -180],
+          [-85, 180],
+        ]}
+        maxBoundsViscosity={0.8}
+      >
+        <MapController center={centerLocation} />
+        <ResizeRevalidator />
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        />
+        <LocationPicker
+          onSelect={(lat, lng) => {
+            setMarkerPosition([lat, lng]);
+          }}
+        />
+
+        {/* Mini popup with + button - marker zostaje! */}
+        {markerPosition && (
+          <Marker
+            position={markerPosition}
+            ref={markerRef}
+            eventHandlers={{
+              add: (e) => {
+                e.target.openPopup();
+              },
+            }}
+            icon={customIcon}
+          >
+            <Popup>
+              <div
+                style={{
+                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                }}
+                className="text-center p-2"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (markerPosition) {
+                      onCreateEventClick(markerPosition[0], markerPosition[1]);
+                      // Usunięto: setMarkerPosition(null); - pinezka zostaje!
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Stwórz nowy event
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {events.map((event) => (
+          <Marker
+            key={event.id}
+            position={[event.latitude, event.longitude]}
+            ref={(ref) => {
+              if (ref) {
+                markerRefs.current[event.id] = ref;
+              }
+            }}
+            icon={
+              event.isAttending
+                ? customIconJoined
+                : profile?.id === event.creator?.id
+                  ? customIconCreated
+                  : customIcon
+            }
+
+          >
+            <Popup>
+              <div
+                style={{
+                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
+                }}
+                className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <strong>{event.title}</strong>
+                <br />
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    try {
+                      onEventClick(event);
+                    } catch (err) {
+                      // ignore errors
+                    }
+                  }}
+                  className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
+                >
+                  Details
+                </button>
+
+                <br />
+                <small>
+                  {event.eventDate &&
+                    new Date(event.eventDate).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </small>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}

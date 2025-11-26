@@ -62,7 +62,7 @@ export default function EventsList({
   endDate,
   setEndDate,
   membershipFilter,
-  setMembershipFilter
+  setMembershipFilter,
 }: EventsListProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
@@ -79,7 +79,7 @@ export default function EventsList({
         {([
           { key: "all", label: "Wszystkie" },
           { key: "joined", label: "Dołączone" },
-            { key: "not_joined", label: "Nie dołączone" },
+          { key: "not_joined", label: "Nie dołączone" },
           { key: "mine", label: "Moje" },
         ] as { key: MembershipFilter; label: string }[]).map(({ key, label }) => {
           const active = membershipFilter === key;
@@ -102,7 +102,7 @@ export default function EventsList({
     </div>
   );
 
-  useEffect(() => {
+  const loadEvents = () => {
     setLoading(true);
     setError(null);
     fetch("/api/events")
@@ -134,6 +134,10 @@ export default function EventsList({
         setEvents([]);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadEvents();
   }, []);
 
   useEffect(() => {
@@ -258,6 +262,7 @@ export default function EventsList({
 
   return (
     <div className="relative h-full flex flex-col">
+      {/* Modal for event details */}
       {useModal && selectedEvent && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90%] overflow-hidden">
@@ -265,9 +270,6 @@ export default function EventsList({
           </div>
         </div>
       )}
-
-      {/* Jedno miejsce na toggle – jeśli chcesz tutaj, odkomentuj: */}
-      {/* <div className="px-4 pt-2"><MembershipFilterToggle /></div> */}
 
       <div className="flex-1 overflow-y-auto">
         {filteredEvents.length === 0 ? (
