@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import ChannelCard from './ChannelCard';
 
 interface Channel {
@@ -26,7 +25,6 @@ export default function ChannelList() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     fetchChannels();
@@ -63,64 +61,58 @@ export default function ChannelList() {
     }
   };
 
-  const handleBack = () => {
-    router.push('/dashboard');
-  };
-
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-        <p className="text-gray-500 mt-4">Loading channels...</p>
+      <div className="text-center py-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
+        <p className="text-gray-500 dark:text-gray-400 mt-4">Loading channels...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <p className="font-semibold">Error loading channels</p>
-        <p className="text-sm mt-1">{error}</p>
-        <button
-          onClick={fetchChannels}
-          className="mt-3 text-sm bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Try Again
-        </button>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-red-800 dark:text-red-200">Error loading channels</h3>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
+            <button
+              onClick={fetchChannels}
+              className="mt-3 text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (channels.length === 0) {
     return (
-      <div>
-        <button
-          onClick={handleBack}
-          className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-        >
-          ← Back to Dashboard
-        </button>
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-xl mb-2">No channels yet</p>
-          <p>Be the first to create one!</p>
+      <div className="text-center py-16">
+        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
         </div>
+        <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No channels yet</p>
+        <p className="text-gray-500 dark:text-gray-400">Be the first to create one!</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <button
-        onClick={handleBack}
-        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors"
-      >
-        ← Back to Dashboard
-      </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {channels.map((channel) => (
-          <ChannelCard key={channel.id} channel={channel} />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {channels.map((channel) => (
+        <ChannelCard key={channel.id} channel={channel} />
+      ))}
     </div>
   );
 }

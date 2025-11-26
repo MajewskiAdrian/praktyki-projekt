@@ -78,11 +78,11 @@ export default function EventAttendees({
               )}
               <div className="text-sm">
                 <div className="text-black dark:text-white">{attendee.name}</div>
-                {attendee.email && (
+                {/* {attendee.email && (
                   <div className="text-gray-500 dark:text-gray-400 text-xs">
                     {attendee.email}
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           ))}

@@ -1,7 +1,8 @@
 "use client";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import EventsList from "./components/EventsList";
+import EventsList, { MembershipFilter } from "./components/EventsList";
+import EventData from "./components/EventData";
 import CircleMenu from "./components/CircleMenu";
 import { useState, useCallback } from "react";
 
@@ -34,6 +35,7 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>("all");
 
   const handleEventAdded = (newEvent: MyEvent) => {
     setRefreshKey((prev) => prev + 1);
@@ -41,6 +43,7 @@ export default function Home() {
   };
 
   const handleEventClick = useCallback((event: MyEvent) => {
+    // Set selected and focused event (no debug logs)
     setSelectedEvent(event);
     setFocusedEventId(event.id);
   }, []);
@@ -163,31 +166,41 @@ export default function Home() {
                   setStartDate={setStartDate}
                   endDate={endDate}
                   setEndDate={setEndDate}
+                  membershipFilter={membershipFilter}
+                  setMembershipFilter={setMembershipFilter}
                 />
               </div>
             </div>
           </div>
 
-          {/* Events List */}
+          {/* Events List / Details */}
           <div className="flex-1 overflow-hidden">
-            <EventsList
-              key={refreshKey}
-              selectedEvent={selectedEvent}
-              setSelectedEvent={setSelectedEvent}
-              onEventClick={handleEventClick}
-              filtersOnly={false}
-              useModal={false}
-              searchText={searchText}
-              setSearchText={setSearchText}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              selectedTags={selectedTags}
-              setSelectedTags={setSelectedTags}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-            />
+            {selectedEvent ? (
+              <div className="h-full">
+                <EventData event={selectedEvent as any} onClose={() => setSelectedEvent(null)} />
+              </div>
+            ) : (
+              <EventsList
+                key={refreshKey}
+                selectedEvent={selectedEvent}
+                setSelectedEvent={setSelectedEvent}
+                onEventClick={handleEventClick}
+                filtersOnly={false}
+                useModal={false}
+                searchText={searchText}
+                setSearchText={setSearchText}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                selectedTags={selectedTags}
+                setSelectedTags={setSelectedTags}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                membershipFilter={membershipFilter}
+                setMembershipFilter={setMembershipFilter}
+              />
+            )}
           </div>
         </aside>
 

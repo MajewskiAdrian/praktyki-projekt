@@ -209,14 +209,14 @@ export default function EventData({ event, onClose }: EventDataProps) {
                 </div>
               )}
               <div className="text-sm">
-                <div className="text-black dark:text-white font-medium">
+                <div className="text-black dark:text-white text-base">
                   {displayCreator?.name ?? "Unknown"}
                 </div>
-                {displayCreator?.email && (
+                {/* {displayCreator?.email && (
                   <div className="text-gray-500 dark:text-gray-400 text-xs">
                     {displayCreator.email}
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </div>

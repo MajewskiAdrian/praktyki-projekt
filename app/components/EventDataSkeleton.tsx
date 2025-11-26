@@ -1,6 +1,6 @@
 export default function EventDataSkeleton({ onClose }: { onClose: () => void }) {
   return (
-    <div className="absolute inset-0 bg-white dark:bg-gray-800 z-50 flex flex-col">
+    <div className="relative h-full bg-white dark:bg-gray-800 flex flex-col">
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
         <div className="h-8 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded w-1/3 animate-shimmer bg-size-[200%_100%]" />
         <button
@@ -11,7 +11,7 @@ export default function EventDataSkeleton({ onClose }: { onClose: () => void }) 
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+  <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="space-y-6">
           {/* Description */}
           <div className="space-y-2">

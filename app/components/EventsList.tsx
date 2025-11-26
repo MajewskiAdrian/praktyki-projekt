@@ -23,6 +23,8 @@ export interface Event {
   city?: string | null;
 }
 
+export type MembershipFilter = "all" | "joined" | "not_joined" | "mine";
+
 interface EventsListProps {
   onEventClick: (event: Event) => void;
   selectedEvent: Event | null;
@@ -39,11 +41,13 @@ interface EventsListProps {
   setStartDate: (date: string) => void;
   endDate: string;
   setEndDate: (date: string) => void;
+  membershipFilter: MembershipFilter;
+  setMembershipFilter: (v: MembershipFilter) => void;
 }
 
-export default function EventsList({ 
-  onEventClick, 
-  selectedEvent, 
+export default function EventsList({
+  onEventClick,
+  selectedEvent,
   setSelectedEvent,
   filtersOnly = false,
   useModal = false,
@@ -56,68 +60,97 @@ export default function EventsList({
   startDate,
   setStartDate,
   endDate,
-  setEndDate
+  setEndDate,
+  membershipFilter,
+  setMembershipFilter
 }: EventsListProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const MembershipFilterToggle = () => (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Uczestnictwo:</span>
+      <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+        {([
+          { key: "all", label: "Wszystkie" },
+          { key: "joined", label: "Dołączone" },
+            { key: "not_joined", label: "Nie dołączone" },
+          { key: "mine", label: "Moje" },
+        ] as { key: MembershipFilter; label: string }[]).map(({ key, label }) => {
+          const active = membershipFilter === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setMembershipFilter(key)}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                active
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/60"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-
     fetch("/api/events")
       .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || "Błąd serwera");
-        }
+        if (!res.ok) throw new Error((await res.text()) || "Błąd serwera");
         return res.json();
       })
       .then((data: any[]) => {
-        const normalizedEvents: Event[] = data.map((event) => {
+        const normalized: Event[] = data.map((event) => {
           const tags = Array.isArray(event.tags)
             ? event.tags
-                .map((tag: any) => {
-                  if (typeof tag === "object" && tag !== null) {
-                    return tag.name || tag.id?.toString() || "";
-                  }
-                  return String(tag);
-                })
-                .filter((tag: string) => tag.trim() !== "")
+                .map((tag: any) =>
+                  typeof tag === "object" && tag !== null
+                    ? tag.name || tag.id?.toString() || ""
+                    : String(tag)
+                )
+                .filter((t: string) => t.trim() !== "")
             : [];
-
           const location = event.city || event.neighborhood || event.address || undefined;
-
-          return {
-            ...event,
-            tags,
-            location,
-            locationLoading: false,
-          };
+          return { ...event, tags, location, locationLoading: false };
         });
-
-        setEvents(normalizedEvents);
-        setLoading(false);
-
-        const tags = new Set<string>();
-        normalizedEvents.forEach((event) => {
-          event.tags?.forEach((tag) => {
-            if (tag && tag.trim()) {
-              tags.add(tag.trim());
-            }
-          });
-        });
-        setAvailableTags(Array.from(tags).sort());
+        setEvents(normalized);
+        const tagSet = new Set<string>();
+        normalized.forEach((e) => e.tags?.forEach((t: string) => t && tagSet.add(t)));
+        setAvailableTags(Array.from(tagSet).sort());
       })
-      .catch((err: any) => {
-        console.error("❌ Fetch error:", err);
+      .catch(() => {
         setError("Failed to load events.");
         setEvents([]);
-        setLoading(false);
-      });
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/users/events/joined", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        const ids = Array.isArray(d?.joinedEvents) ? d.joinedEvents.map((e: any) => String(e.id)) : [];
+        setJoinedIds(new Set(ids));
+      })
+      .catch(() => setJoinedIds(new Set()));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/users/profile", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setCurrentUserId(d?.user?.id ? String(d.user.id) : null))
+      .catch(() => setCurrentUserId(null));
   }, []);
 
   useEffect(() => {
@@ -125,78 +158,98 @@ export default function EventsList({
 
     if (searchText) {
       const q = searchText.toLowerCase();
-      result = result.filter((event) => {
-        const inTitle = event.title && event.title.toLowerCase().includes(q);
-        const inDesc = event.description && event.description.toLowerCase().includes(q);
-        const inLocation = event.location && event.location.toLowerCase().includes(q);
-        return Boolean(inTitle || inDesc || inLocation);
-      });
+      result = result.filter((e) =>
+        [e.title, e.description, e.location]
+          .filter(Boolean)
+          .some((val) => String(val).toLowerCase().includes(q))
+      );
     }
-
     if (startDate) {
-      result = result.filter((event) => new Date(event.eventDate) >= new Date(startDate));
+      result = result.filter((e) => new Date(e.eventDate) >= new Date(startDate));
     }
     if (endDate) {
-      result = result.filter((event) => new Date(event.eventDate) <= new Date(endDate + "T23:59:59"));
+      result = result.filter(
+        (e) => new Date(e.eventDate) <= new Date(endDate + "T23:59:59")
+      );
+    }
+    if (selectedTags.length > 0) {
+      result = result.filter((e) => selectedTags.every((t) => e.tags?.includes(t)));
     }
 
-    if (selectedTags.length > 0) {
-      result = result.filter((event) => selectedTags.every((tag) => event.tags?.includes(tag)));
-    }
+    result = result.filter((e) => {
+      const isCreator =
+        currentUserId && e.creator?.id && String(e.creator.id) === String(currentUserId);
+      const isJoined = joinedIds.has(String(e.id)) || isCreator;
+      switch (membershipFilter) {
+        case "joined":
+          return isJoined;
+        case "not_joined":
+          return !isJoined;
+        case "mine":
+          return !!isCreator;
+        default:
+          return true;
+      }
+    });
 
     if (sortBy === "date") {
-      result.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-    } else if (sortBy === "title") {
+      result.sort(
+        (a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+      );
+    } else {
       result.sort((a, b) => a.title.localeCompare(b.title));
     }
 
     setFilteredEvents(result);
-  }, [events, sortBy, searchText, selectedTags, startDate, endDate]);
+  }, [
+    events,
+    searchText,
+    startDate,
+    endDate,
+    selectedTags,
+    sortBy,
+    membershipFilter,
+    currentUserId,
+    joinedIds
+  ]);
 
   if (filtersOnly) {
     return (
-      <>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Szukaj
-            </label>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Użyj paska wyszukiwania powyżej — wyszukuje po tytule, opisie i lokalizacji.</p>
-          </div>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Sortuj według
+          </label>
+          <ListSort sortBy={sortBy} setSortBy={setSortBy} />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Sortuj według
-            </label>
-            <ListSort sortBy={sortBy} setSortBy={setSortBy} />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Zakres dat
+          </label>
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+          />
+        </div>
 
+        <MembershipFilterToggle />
+
+        {availableTags.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Zakres dat
+              Filtry tagów
             </label>
-            <DateRangeFilter
-              startDate={startDate}
-              endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
+            <ListFilter
+              availableTags={availableTags}
+              selectedTags={selectedTags}
+              setSelectedTags={setSelectedTags}
             />
           </div>
-
-          {availableTags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Filtry tagów
-              </label>
-              <ListFilter
-                availableTags={availableTags}
-                selectedTags={selectedTags}
-                setSelectedTags={setSelectedTags}
-              />
-            </div>
-          )}
-        </div>
-      </>
+        )}
+      </div>
     );
   }
 
@@ -205,123 +258,99 @@ export default function EventsList({
 
   return (
     <div className="relative h-full flex flex-col">
-      {/* Modal - tylko gdy useModal jest true */}
       {useModal && selectedEvent && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90%] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90%] overflow-hidden">
             <EventData event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           </div>
         </div>
       )}
 
-      {/* Event Data Block - zajmuje całą wysokość gdy useModal jest false i mamy selectedEvent */}
-      {!useModal && selectedEvent ? (
-        <div className="h-full bg-white dark:bg-gray-800 overflow-hidden">
-          <EventData event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-        </div>
-      ) : (
-        // Lista wydarzeń - pokazuje się tylko gdy nie ma wybranego eventu
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-          {filteredEvents.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="text-gray-400 dark:text-gray-500 mb-3">
-                <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">Nie znaleziono wydarzeń</p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Spróbuj zmienić filtry wyszukiwania</p>
-            </div>
-          ) : (
-            <ul className="p-4 space-y-3">
-              {filteredEvents.map((event) => (
+      {/* Jedno miejsce na toggle – jeśli chcesz tutaj, odkomentuj: */}
+      {/* <div className="px-4 pt-2"><MembershipFilterToggle /></div> */}
+
+      <div className="flex-1 overflow-y-auto">
+        {filteredEvents.length === 0 ? (
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            Brak wyników dla wybranych filtrów
+          </div>
+        ) : (
+          <ul className="p-4 space-y-3">
+            {filteredEvents.map((e) => {
+              const isCreator =
+                currentUserId && e.creator?.id && String(e.creator.id) === String(currentUserId);
+              const isJoined = joinedIds.has(String(e.id)) || isCreator;
+              return (
                 <li
-                  key={event.id}
+                  key={e.id}
                   onClick={() => {
-                    setSelectedEvent(event);
-                    onEventClick(event);
+                    setSelectedEvent(e);
+                    onEventClick(e);
                   }}
-                  className="bg-white dark:bg-gray-700 rounded-xl p-4 cursor-pointer border-2 border-gray-100 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:shadow-lg transition-all duration-200 group"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-4 cursor-pointer border-2 border-gray-100 dark:border-gray-600 hover:border-amber-500 hover:shadow transition group"
                 >
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                      {event.title}
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                      {e.title}
                     </h3>
-
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{event.description}</p>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <div className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span className="truncate max-w-[120px]">
-                          {event.locationLoading ? (
-                            <span className="inline-flex items-center gap-1">
-                              <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                              Ładowanie...
-                            </span>
-                          ) : event.location ? (
-                            event.location
-                          ) : (
-                            "Brak lokalizacji"
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        {new Date(event.eventDate).toLocaleString("pl-PL", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                    </div>
-
-                    {event.tags && event.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {event.tags.slice(0, 4).map((tag, index) => (
-                          <span
-                            key={`${event.id}-${tag}-${index}`}
-                            className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {event.tags.length > 4 && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full">
-                            +{event.tags.length - 4}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        isCreator
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                          : isJoined
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isCreator
+                            ? "bg-blue-500"
+                            : isJoined
+                            ? "bg-green-500"
+                            : "bg-gray-400 dark:bg-gray-500"
+                        }`}
+                      />
+                      {isCreator ? "Moje" : isJoined ? "Dołączono" : "Nie dołączono"}
+                    </span>
                   </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                    {e.description}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                    <span>
+                      {new Date(e.eventDate).toLocaleString("pl-PL", {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </span>
+                    <span>{e.location || "Brak lokalizacji"}</span>
+                  </div>
+                  {e.tags && e.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {e.tags.slice(0, 4).map((t, i) => (
+                        <span
+                          key={`${e.id}-${t}-${i}`}
+                          className="px-2.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                      {e.tags.length > 4 && (
+                        <span className="px-2.5 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                          +{e.tags.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

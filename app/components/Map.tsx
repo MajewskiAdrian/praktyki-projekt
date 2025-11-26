@@ -34,6 +34,16 @@ const customIconJoined = L.icon({
   shadowSize: [41, 41],
 });
 
+const customIconCreated = L.icon({
+  iconUrl: "/pins/custom-marker-joined.png",
+  iconRetinaUrl: "/pins/custom-marker-created.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 
 
 function ResizeRevalidator() {
@@ -310,12 +320,13 @@ export default function Map({
                   markerRefs.current[event.id] = ref;
                 }
               }}
+              /* Intentionally no click handler here so clicking the marker only opens the popup.
+                 The Details action is performed by the button inside the popup. */
               icon={
                 (event.isAttending || (profile?.id && profile?.id === event.creator?.id))
                   ? customIconJoined
                   : customIcon
               }
-
             >
               <Popup>
                 <div
@@ -328,7 +339,17 @@ export default function Map({
                   <br />
 
                   <button
-                    onClick={() => onEventClick(event)}
+                    type="button"
+                    onClick={(e) => {
+                        // prevent the click from bubbling to the map / marker
+                        e.stopPropagation();
+                        e.preventDefault();
+                        try {
+                          onEventClick(event);
+                        } catch (err) {
+                          // ignore errors from parent handler here to avoid breaking the map
+                        }
+                    }}
                     className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
                   >
                     Details

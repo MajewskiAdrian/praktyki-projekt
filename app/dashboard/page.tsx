@@ -150,8 +150,8 @@ export default function DashboardPage() {
     );
   })();
 
-  const displayedEvents = activeTab === "all" 
-    ? combinedEvents 
+  const displayedEvents = activeTab === "all"
+    ? combinedEvents
     : combinedEvents.filter(e => e.source === "created");
 
   const totalEvents = combinedEvents.length;
@@ -179,7 +179,7 @@ export default function DashboardPage() {
         setCreatedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
         setJoinedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
         setOpenMenuId(null);
-        
+
         setTimeout(() => setActionMessage(null), 3000);
       } else {
         setActionMessage({ type: 'error', text: data.error || "Failed to delete event" });
@@ -214,7 +214,7 @@ export default function DashboardPage() {
         setActionMessage({ type: 'success', text: "You have left the event" });
         setJoinedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
         setOpenMenuId(null);
-        
+
         setTimeout(() => setActionMessage(null), 3000);
       } else {
         setActionMessage({ type: 'error', text: data.error || "Failed to leave the event" });
@@ -231,11 +231,11 @@ export default function DashboardPage() {
     setActionMessage({ type: 'success', text: "Event updated successfully" });
     setEditingEventId(null);
     setOpenMenuId(null);
-    
+
     // Refresh events lists
     fetchCreatedEvents();
     fetchJoinedEvents();
-    
+
     setTimeout(() => setActionMessage(null), 3000);
   };
 
@@ -281,11 +281,17 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>
-                  {new Date(event.eventDate).toLocaleDateString("pl-PL", {
+                  {/* {new Date(event.eventDate).toLocaleDateString("pl-PL", {
                     day: "2-digit",
                     month: "2-digit",
                     year: "numeric",
                   })}, {new Date(event.eventDate).toLocaleTimeString("pl-PL", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })} */}
+                  {new Date(event.eventDate).toLocaleString("pl-PL", {
+                    day: "2-digit",
+                    month: "2-digit",
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -313,9 +319,9 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
-              
+
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setOpenMenuId(isMenuOpen ? null : event.id)}
                   className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50"
                   disabled={isLoading}
@@ -460,11 +466,10 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Action Message */}
         {actionMessage && (
-          <div className={`mb-4 p-4 rounded-lg ${
-            actionMessage.type === 'success' 
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
+          <div className={`mb-4 p-4 rounded-lg ${actionMessage.type === 'success'
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
               : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-          }`}>
+            }`}>
             <div className="flex items-center gap-2">
               <span>{actionMessage.text}</span>
             </div>
@@ -507,21 +512,19 @@ export default function DashboardPage() {
               <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setActiveTab("all")}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-                    activeTab === "all"
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition ${activeTab === "all"
                       ? "border-amber-500 text-amber-600 dark:text-amber-400"
                       : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   Joined Events
                 </button>
                 <button
                   onClick={() => setActiveTab("created")}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-                    activeTab === "created"
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition ${activeTab === "created"
                       ? "border-amber-500 text-amber-600 dark:text-amber-400"
                       : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   My Created
                 </button>
@@ -590,15 +593,15 @@ export default function DashboardPage() {
       {/* Event Details Popup */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 h-fit-content flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setSelectedEvent(null)}
           />
-          
+
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fadeIn">
-            <EventData 
-              event={selectedEvent} 
-              onClose={() => setSelectedEvent(null)} 
+            <EventData
+              event={selectedEvent}
+              onClose={() => setSelectedEvent(null)}
             />
           </div>
         </div>
@@ -607,11 +610,11 @@ export default function DashboardPage() {
       {/* Edit Event Popup */}
       {editingEventId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setEditingEventId(null)}
           />
-          
+
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn">
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Event</h2>
