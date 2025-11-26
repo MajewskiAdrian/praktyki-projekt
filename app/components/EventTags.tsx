@@ -55,25 +55,25 @@ export default function EventTags({
       ) : tags.length === 0 ? (
         <p>No tags available.</p>
       ) : (
-        <div className="tags">
-          {tags.map((tag) => (
-            <label
-              key={tag.id}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                marginRight: 8,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedTags.includes(tag.id)}
-                onChange={() => toggleTag(tag.id)}
-              />
-              <span>{tag.name}</span>
-            </label>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => {
+            const isSelected = selectedTags.includes(tag.id);
+            return (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => toggleTag(tag.id)}
+                aria-pressed={isSelected}
+                className={`text-sm px-3 py-1 rounded transition-all ${
+                  isSelected
+                    ? "bg-amber-500 text-white hover:bg-amber-600"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                {tag.name}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
