@@ -1,13 +1,15 @@
 "use client";
 import "@/app/ui/global.css";
 import { useEffect, useState } from "react";
-import DeleteEventButton from "@/app/components/DeleteEventButton";
 import Link from "next/link";
-import LeaveEventButton from "@/app/components/LeaveEventButton";
 import CircleMenu from "@/app/components/CircleMenu";
+import EventData from "@/app/components/EventData";
+import EditEvent from "@/app/components/EditEventModal";
+import { Event } from "@/app/components/EventsList";
 
 // typ dla profilu użytkownika
 interface UserProfile {
+  id: string;
   name: string;
   email: string;
 }
@@ -20,7 +22,7 @@ interface EventItem {
   maxAttendees: number;
   latitude: number;
   longitude: number;
-  // optional address fields from DB
+  creatorId: string;
   address?: string | null;
   neighborhood?: string | null;
   city?: string | null;
@@ -35,7 +37,6 @@ interface Channel {
   avatarUrl?: string;
 }
 
-// rozszerzony typ lokalny z informacją skąd event pochodzi
 type CombinedEvent = EventItem & { source: "created" | "joined" };
 
 export default function DashboardPage() {
@@ -45,6 +46,11 @@ export default function DashboardPage() {
   const [followedChannels, setFollowedChannels] = useState<Channel[] | null>(null);
   const [locationNames, setLocationNames] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<"all" | "created">("all");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/users/profile")
@@ -55,22 +61,30 @@ export default function DashboardPage() {
       .catch((err) => console.error("Failed to fetch profile:", err));
   }, []);
 
-  useEffect(() => {
+  const fetchCreatedEvents = () => {
     fetch("/api/users/events/created")
       .then((res) => res.json())
       .then((data) => {
         if (data.createdEvents) setCreatedEvents(data.createdEvents);
       })
       .catch((err) => console.error("Failed to fetch created events:", err));
-  }, []);
+  };
 
-  useEffect(() => {
+  const fetchJoinedEvents = () => {
     fetch("/api/users/events/joined")
       .then((res) => res.json())
       .then((data) => {
         if (data.joinedEvents) setJoinedEvents(data.joinedEvents);
       })
       .catch((err) => console.error("Failed to fetch joined events:", err));
+  };
+
+  useEffect(() => {
+    fetchCreatedEvents();
+  }, []);
+
+  useEffect(() => {
+    fetchJoinedEvents();
   }, []);
 
   useEffect(() => {
@@ -142,6 +156,94 @@ export default function DashboardPage() {
 
   const totalEvents = combinedEvents.length;
 
+  // If an event is being edited, try to find its data from the already-loaded events
+  const editingEvent = editingEventId ? combinedEvents.find((e) => e.id === editingEventId) : undefined;
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+
+    setActionLoading(eventId);
+    setActionMessage(null);
+
+    try {
+      const response = await fetch("/api/events/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: eventId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setActionMessage({ type: 'success', text: data.message || "Event deleted successfully" });
+        setCreatedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
+        setJoinedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
+        setOpenMenuId(null);
+        
+        setTimeout(() => setActionMessage(null), 3000);
+      } else {
+        setActionMessage({ type: 'error', text: data.error || "Failed to delete event" });
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      setActionMessage({ type: 'error', text: "Error: " + (error as Error).message });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleLeaveEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to leave this event?')) return;
+
+    setActionLoading(eventId);
+    setActionMessage(null);
+
+    try {
+      const response = await fetch(`/api/events/leave`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+        body: JSON.stringify({ eventId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setActionMessage({ type: 'success', text: "You have left the event" });
+        setJoinedEvents(prev => prev ? prev.filter(e => e.id !== eventId) : null);
+        setOpenMenuId(null);
+        
+        setTimeout(() => setActionMessage(null), 3000);
+      } else {
+        setActionMessage({ type: 'error', text: data.error || "Failed to leave the event" });
+      }
+    } catch (error) {
+      console.error('Failed to leave event:', error);
+      setActionMessage({ type: 'error', text: "An error occurred. Please try again." });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleEventUpdated = () => {
+    setActionMessage({ type: 'success', text: "Event updated successfully" });
+    setEditingEventId(null);
+    setOpenMenuId(null);
+    
+    // Refresh events lists
+    fetchCreatedEvents();
+    fetchJoinedEvents();
+    
+    setTimeout(() => setActionMessage(null), 3000);
+  };
+
+  const handleEditClick = (eventId: string) => {
+    setEditingEventId(eventId);
+    setOpenMenuId(null);
+  };
+
   const renderEventsList = (events: CombinedEvent[]) => {
     if (createdEvents === null || joinedEvents === null) {
       return (
@@ -159,60 +261,119 @@ export default function DashboardPage() {
       );
     }
 
-    return events.map((event) => (
-      <div
-        key={event.id}
-        className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700"
-      >
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 truncate">
-              {event.title}
-            </h3>
-            <div className="flex items-center gap-2 mb-2 text-sm text-gray-600 dark:text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>
-                {new Date(event.eventDate).toLocaleDateString("pl-PL", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })}, {new Date(event.eventDate).toLocaleTimeString("pl-PL", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-            <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="break-words">
-                {locationNames[event.id] || `${event.latitude}, ${event.longitude}`}
-              </span>
-            </div>
-          </div>
+    return events.map((event) => {
+      const isCreator = profile && event.creatorId === profile.id;
+      const isMenuOpen = openMenuId === event.id;
+      const isLoading = actionLoading === event.id;
 
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-              title="Details"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </button>
+      return (
+        <div
+          key={event.id}
+          className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 truncate">
+                {event.title}
+              </h3>
+              <div className="flex items-center gap-2 mb-2 text-sm text-gray-600 dark:text-gray-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>
+                  {new Date(event.eventDate).toLocaleDateString("pl-PL", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}, {new Date(event.eventDate).toLocaleTimeString("pl-PL", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="break-words">
+                  {locationNames[event.id] || `${event.latitude}, ${event.longitude}`}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedEvent(event as any)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+                title="Details"
+                disabled={isLoading}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setOpenMenuId(isMenuOpen ? null : event.id)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                  )}
+                </button>
+
+                {isMenuOpen && !isLoading && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
+                    {isCreator ? (
+                      <>
+                        <button
+                          onClick={() => handleEditClick(event.id)}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit Event
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(event.id)}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete Event
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleLeaveEvent(event.id)}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Leave Event
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    ));
+      );
+    });
   };
 
   const renderChannels = () => {
@@ -266,6 +427,18 @@ export default function DashboardPage() {
     ));
   };
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId && !(event.target as Element).closest('.relative')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -285,6 +458,19 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Action Message */}
+        {actionMessage && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            actionMessage.type === 'success' 
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
+              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span>{actionMessage.text}</span>
+            </div>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -361,19 +547,15 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     Followed Channels
                   </h2>
-                  
                 </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 {followedChannels?.length || 0} channels
               </p>
-              {/* Channels List */}
-            <div className="space-y-2">
-              {renderChannels()}
+              <div className="space-y-2">
+                {renderChannels()}
+              </div>
             </div>
-            </div>
-
-            
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4">
@@ -405,14 +587,69 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* Floating Action Button */}
-      <Link
-        href="/channels"
-        className="fixed bottom-6 right-6 w-14 h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
-        title="Browse Channels"
-      >
-        <span className="text-2xl">💬</span>
-      </Link>
+      {/* Event Details Popup */}
+      {selectedEvent && (
+        <div className="fixed inset-0 z-50 h-fit-content flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={() => setSelectedEvent(null)}
+          />
+          
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fadeIn">
+            <EventData 
+              event={selectedEvent} 
+              onClose={() => setSelectedEvent(null)} 
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Event Popup */}
+      {editingEventId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={() => setEditingEventId(null)}
+          />
+          
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Event</h2>
+              <button
+                onClick={() => setEditingEventId(null)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              >
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              {editingEventId && (
+                <EditEvent
+                  eventId={editingEventId}
+                  initialEvent={editingEvent ? {
+                    id: editingEvent.id,
+                    title: editingEvent.title,
+                    description: editingEvent.description,
+                    eventDate: new Date(editingEvent.eventDate).toISOString(),
+                    maxAttendees: editingEvent.maxAttendees,
+                    latitude: editingEvent.latitude,
+                    longitude: editingEvent.longitude,
+                    address: editingEvent.address ?? null,
+                    city: editingEvent.city ?? null,
+                    neighborhood: editingEvent.neighborhood ?? null,
+                    tags: (editingEvent as any).tags ?? []
+                  } : null}
+                  onEventUpdated={handleEventUpdated}
+                  onCancel={() => setEditingEventId(null)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

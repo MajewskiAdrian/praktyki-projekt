@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import EventData from "./EventData";
 import ListSort from "./ListSort";
 import ListFilter from "./ListFilter";
-import SearchBar from "./Searchbar";
 import DateRangeFilter from "./DateRangeFilter";
 import EventListSkeleton from "./EventListSkeleton";
 
@@ -29,11 +28,9 @@ interface EventsListProps {
   selectedEvent: Event | null;
   setSelectedEvent: (event: Event | null) => void;
   filtersOnly?: boolean;
-  // Shared state props
+  useModal?: boolean;
   searchText: string;
   setSearchText: (text: string) => void;
-  searchType: "text" | "location";
-  setSearchType: (type: "text" | "location") => void;
   sortBy: "date" | "title";
   setSortBy: (sort: "date" | "title") => void;
   selectedTags: string[];
@@ -49,10 +46,9 @@ export default function EventsList({
   selectedEvent, 
   setSelectedEvent,
   filtersOnly = false,
+  useModal = false,
   searchText,
   setSearchText,
-  searchType,
-  setSearchType,
   sortBy,
   setSortBy,
   selectedTags,
@@ -106,7 +102,6 @@ export default function EventsList({
         setEvents(normalizedEvents);
         setLoading(false);
 
-        // Zbierz tagi tylko z istniejących eventów
         const tags = new Set<string>();
         normalizedEvents.forEach((event) => {
           event.tags?.forEach((tag) => {
@@ -129,17 +124,13 @@ export default function EventsList({
     let result = [...events];
 
     if (searchText) {
-      if (searchType === "location") {
-        result = result.filter(
-          (event) => event.location && event.location.toLowerCase().includes(searchText.toLowerCase())
-        );
-      } else {
-        result = result.filter(
-          (event) =>
-            event.title.toLowerCase().includes(searchText.toLowerCase()) ||
-            event.description.toLowerCase().includes(searchText.toLowerCase())
-        );
-      }
+      const q = searchText.toLowerCase();
+      result = result.filter((event) => {
+        const inTitle = event.title && event.title.toLowerCase().includes(q);
+        const inDesc = event.description && event.description.toLowerCase().includes(q);
+        const inLocation = event.location && event.location.toLowerCase().includes(q);
+        return Boolean(inTitle || inDesc || inLocation);
+      });
     }
 
     if (startDate) {
@@ -160,23 +151,17 @@ export default function EventsList({
     }
 
     setFilteredEvents(result);
-  }, [events, sortBy, searchText, searchType, selectedTags, startDate, endDate]);
+  }, [events, sortBy, searchText, selectedTags, startDate, endDate]);
 
-  // Jeśli to tylko sekcja filtrów
   if (filtersOnly) {
     return (
       <>
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Typ wyszukiwania
+              Szukaj
             </label>
-            <SearchBar 
-              searchText={searchText}
-              setSearchText={setSearchText}
-              searchType={searchType}
-              setSearchType={setSearchType}
-            />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Użyj paska wyszukiwania powyżej — wyszukuje po tytule, opisie i lokalizacji.</p>
           </div>
 
           <div>
@@ -215,123 +200,126 @@ export default function EventsList({
     );
   }
 
-  // Normalna lista wydarzeń
   if (loading) return <EventListSkeleton count={5} />;
   if (error) return <p className="p-4 text-red-500 text-sm">{error}</p>;
 
   return (
     <div className="relative h-full flex flex-col">
-      <div
-        className={`flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 ${
-          selectedEvent ? "blur-sm pointer-events-none" : ""
-        }`}
-      >
-        {filteredEvents.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-gray-400 dark:text-gray-500 mb-3">
-              <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Nie znaleziono wydarzeń</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Spróbuj zmienić filtry wyszukiwania</p>
-          </div>
-        ) : (
-          <ul className="p-4 space-y-3">
-            {filteredEvents.map((event) => (
-              <li
-                key={event.id}
-                onClick={() => {
-                  setSelectedEvent(event);
-                  onEventClick(event);
-                }}
-                className="bg-white dark:bg-gray-700 rounded-xl p-4 cursor-pointer border-2 border-gray-100 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:shadow-lg transition-all duration-200 group"
-              >
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                    {event.title}
-                  </h3>
-
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{event.description}</p>
-
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="truncate max-w-[120px]">
-                        {event.locationLoading ? (
-                          <span className="inline-flex items-center gap-1">
-                            <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                            Ładowanie...
-                          </span>
-                        ) : event.location ? (
-                          event.location
-                        ) : (
-                          "Brak lokalizacji"
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {new Date(event.eventDate).toLocaleString("pl-PL", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-
-                  {event.tags && event.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {event.tags.slice(0, 4).map((tag, index) => (
-                        <span
-                          key={`${event.id}-${tag}-${index}`}
-                          className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {event.tags.length > 4 && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full">
-                          +{event.tags.length - 4}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Modal */}
-      {selectedEvent && (
+      {/* Modal - tylko gdy useModal jest true */}
+      {useModal && selectedEvent && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90%] overflow-hidden animate-in zoom-in-95 duration-200">
             <EventData event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           </div>
+        </div>
+      )}
+
+      {/* Event Data Block - zajmuje całą wysokość gdy useModal jest false i mamy selectedEvent */}
+      {!useModal && selectedEvent ? (
+        <div className="h-full bg-white dark:bg-gray-800 overflow-hidden">
+          <EventData event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        </div>
+      ) : (
+        // Lista wydarzeń - pokazuje się tylko gdy nie ma wybranego eventu
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+          {filteredEvents.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-400 dark:text-gray-500 mb-3">
+                <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">Nie znaleziono wydarzeń</p>
+              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Spróbuj zmienić filtry wyszukiwania</p>
+            </div>
+          ) : (
+            <ul className="p-4 space-y-3">
+              {filteredEvents.map((event) => (
+                <li
+                  key={event.id}
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    onEventClick(event);
+                  }}
+                  className="bg-white dark:bg-gray-700 rounded-xl p-4 cursor-pointer border-2 border-gray-100 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:shadow-lg transition-all duration-200 group"
+                >
+                  <div className="flex flex-col gap-2">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                      {event.title}
+                    </h3>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{event.description}</p>
+
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="truncate max-w-[120px]">
+                          {event.locationLoading ? (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                              Ładowanie...
+                            </span>
+                          ) : event.location ? (
+                            event.location
+                          ) : (
+                            "Brak lokalizacji"
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        {new Date(event.eventDate).toLocaleString("pl-PL", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+
+                    {event.tags && event.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {event.tags.slice(0, 4).map((tag, index) => (
+                          <span
+                            key={`${event.id}-${tag}-${index}`}
+                            className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {event.tags.length > 4 && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full">
+                            +{event.tags.length - 4}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

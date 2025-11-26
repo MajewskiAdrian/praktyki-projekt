@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
 
         const joinedEvents = await prisma.event.findMany({
             where: { attendees: { some: { id: decoded.id } } },
+            include: { tags: true, creator: { select: { id: true, name: true, email: true, avatarUrl: true } } },
         });
 
         if (!joinedEvents) return NextResponse.json({ error: "Events joined by user not found" }, { status: 404 });

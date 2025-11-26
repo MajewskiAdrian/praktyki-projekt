@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
 
     const createdEvents = await prisma.event.findMany({
       where: { creatorId: decoded.id },
+      include: { tags: true, creator: { select: { id: true, name: true, email: true, avatarUrl: true } } },
     });
 
     if (!createdEvents) return NextResponse.json({ error: "Events created by user not found" }, { status: 404 });

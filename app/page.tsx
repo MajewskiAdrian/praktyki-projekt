@@ -30,7 +30,6 @@ export default function Home() {
 
   // Shared filter state
   const [searchText, setSearchText] = useState("");
-  const [searchType, setSearchType] = useState<"text" | "location">("text");
   const [sortBy, setSortBy] = useState<"date" | "title">("date");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("");
@@ -153,10 +152,9 @@ export default function Home() {
                   setSelectedEvent={setSelectedEvent}
                   onEventClick={handleEventClick}
                   filtersOnly={true}
+                  useModal={false}
                   searchText={searchText}
                   setSearchText={setSearchText}
-                  searchType={searchType}
-                  setSearchType={setSearchType}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
                   selectedTags={selectedTags}
@@ -178,10 +176,9 @@ export default function Home() {
               setSelectedEvent={setSelectedEvent}
               onEventClick={handleEventClick}
               filtersOnly={false}
+              useModal={false}
               searchText={searchText}
               setSearchText={setSearchText}
-              searchType={searchType}
-              setSearchType={setSearchType}
               sortBy={sortBy}
               setSortBy={setSortBy}
               selectedTags={selectedTags}

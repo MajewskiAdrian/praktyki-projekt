@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     { expiresIn: "1d" }
   );
 
-  const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Strict; Secure`;
+  const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=86400; SameSite=Lax`;// do zmienienia potem (do testów)
 
   return NextResponse.json(
     { message: "Login Succesful" },
