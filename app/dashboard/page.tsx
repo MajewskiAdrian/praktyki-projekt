@@ -249,14 +249,49 @@ export default function DashboardPage() {
     setOpenMenuId(null);
   };
 
-  const handleCreateChannelClick = (event: CombinedEvent) => {
-    // Encode event data in URL parameters
-    const params = new URLSearchParams({
-      eventId: event.id,
-      eventTitle: event.title,
-    });
-    router.push(`/channels/create?${params.toString()}`);
-    setOpenMenuId(null);
+  const handleCreateChannelClick = async (event: CombinedEvent) => {
+    setActionLoading(event.id);
+    setActionMessage(null);
+
+    try {
+      const response = await fetch('/api/channels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: `${event.title} - Channel`,
+          description: `Discussion channel for: ${event.description}`,
+          isPublic: true,
+          eventId: event.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setActionMessage({ type: 'success', text: 'Channel created successfully!' });
+
+        // Odśwież listy eventów, aby pokazać nowy channelId
+        fetchCreatedEvents();
+        fetchJoinedEvents();
+
+        setOpenMenuId(null);
+
+        // Przekieruj do nowo utworzonego kanału po 1 sekundzie
+        setTimeout(() => {
+          router.push(`/channels/${data.id}`);
+        }, 1000);
+      } else {
+        setActionMessage({ type: 'error', text: data.error || 'Failed to create channel' });
+      }
+    } catch (error) {
+      console.error('Error creating channel:', error);
+      setActionMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const renderEventsList = (events: CombinedEvent[]) => {

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import LocationSearch from "../LocationSearch";
+import { setLocation } from '@/lib/locationStore';
 
 type UserDto = {
   id: string;
@@ -257,6 +258,13 @@ export default function ProfileForm() {
                         setCity(loc.label);
                         setLatitude(loc.lat);
                         setLongitude(loc.lng);
+                        // also publish the quick client-side location so map and other
+                        // components can react instantly (localStorage + BroadcastChannel)
+                        try {
+                          setLocation({ lat: loc.lat, lng: loc.lng });
+                        } catch (err) {
+                          // ignore
+                        }
                         setCityEditing(false);
                         setBackupLocation(null);
                         // clear key to unmount the search component

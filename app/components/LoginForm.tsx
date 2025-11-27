@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { setLocation } from '@/lib/locationStore';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -50,9 +51,37 @@ export default function LoginForm() {
       }
 
       const user = await res.json();
+      // Try to seed client-side store with coordinates.
+      // Some backends return user in the login response, others require a separate /profile request.
+      try {
+        if (user && typeof user.latitude === 'number' && typeof user.longitude === 'number') {
+          setLocation({ lat: user.latitude, lng: user.longitude });
+        } else {
+          // fallback: fetch profile which should include coordinates when available
+          try {
+            const p = await fetch('/api/users/profile', { credentials: 'include' });
+            if (p.ok) {
+              const pj = await p.json().catch(() => null);
+              if (pj?.user && typeof pj.user.latitude === 'number' && typeof pj.user.longitude === 'number') {
+                setLocation({ lat: pj.user.latitude, lng: pj.user.longitude });
+              }
+            }
+          } catch (err) {
+            // ignore
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
       setStatusType("success");
       setStatusMsg("Login successful!");
       console.log("User logged in:", user);
+      try {
+        // signal that the app should re-fetch profile after navigation (survives navigation)
+        sessionStorage.setItem('app:fetchProfileAfterLogin', '1');
+      } catch (e) {
+        // ignore
+      }
       router.push('/');
     } catch (error: any) {
       console.error(error);
@@ -76,7 +105,7 @@ export default function LoginForm() {
       </div>
 
       <p className="text-gray-500 text-center mb-8">
-       Turn your city into a social map — pin hangouts, join friends, and meet new people
+        Turn your city into a social map — pin hangouts, join friends, and meet new people
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -127,18 +156,17 @@ export default function LoginForm() {
         </div>
 
         <div className="text-right">
-          
+
         </div>
 
         {/* Status Message */}
         {statusMsg && (
           <div
             role="status"
-            className={`p-3 rounded-xl text-sm ${
-              statusType === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+            className={`p-3 rounded-xl text-sm ${statusType === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+              }`}
           >
             {statusMsg}
           </div>

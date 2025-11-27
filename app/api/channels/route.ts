@@ -6,7 +6,7 @@ import { verifyAuth } from '@/lib/auth';
 export async function GET(req: NextRequest) {
   try {
     console.log('=== GET /api/channels ===');
-    
+
     const userId = await verifyAuth(req);
     console.log('User ID:', userId);
 
@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
       channels = await prisma.channel.findMany({
         where: { isPublic: true },
         include: {
-          owner: { 
-            select: { id: true, name: true, email: true } 
+          owner: {
+            select: { id: true, name: true, email: true }
           },
-          _count: { 
-            select: { members: true, messages: true } 
+          _count: {
+            select: { members: true, messages: true }
           }
         },
         orderBy: { createdAt: 'desc' },
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         where: {
           OR: [
             { isPublic: true },
-            { 
+            {
               members: {
                 some: { userId }
               }
@@ -44,11 +44,11 @@ export async function GET(req: NextRequest) {
           ]
         },
         include: {
-          owner: { 
-            select: { id: true, name: true, email: true } 
+          owner: {
+            select: { id: true, name: true, email: true }
           },
-          _count: { 
-            select: { members: true, messages: true } 
+          _count: {
+            select: { members: true, messages: true }
           },
           members: {
             where: { userId },
@@ -63,11 +63,11 @@ export async function GET(req: NextRequest) {
       channels = await prisma.channel.findMany({
         where: { isPublic: true },
         include: {
-          owner: { 
-            select: { id: true, name: true, email: true } 
+          owner: {
+            select: { id: true, name: true, email: true }
           },
-          _count: { 
-            select: { members: true, messages: true } 
+          _count: {
+            select: { members: true, messages: true }
           }
         },
         orderBy: { createdAt: 'desc' },
@@ -77,14 +77,14 @@ export async function GET(req: NextRequest) {
 
     console.log('Channels fetched:', channels.length);
     return NextResponse.json(channels);
-    
+
   } catch (error: any) {
     console.error('GET /api/channels error:', error);
     console.error('Error message:', error.message);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       error: 'Failed to fetch channels',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 }
@@ -93,10 +93,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     console.log('=== POST /api/channels START ===');
-    
+
     const userId = await verifyAuth(req);
     console.log('userId from verifyAuth:', userId);
-    
+
     if (!userId) {
       console.error('No userId - unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -104,11 +104,31 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     console.log('Request body:', body);
-    
-    const { title, description, isPublic, avatarUrl } = body;
+
+    const { title, description, isPublic, avatarUrl, eventId } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
+
+    // Jeśli eventId jest podane, sprawdź czy event istnieje i czy użytkownik jest jego twórcą
+    if (eventId) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { creatorId: true, channelId: true }
+      });
+
+      if (!event) {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+
+      if (event.creatorId !== userId) {
+        return NextResponse.json({ error: 'Only event creator can create a channel for this event' }, { status: 403 });
+      }
+
+      if (event.channelId) {
+        return NextResponse.json({ error: 'This event already has a channel' }, { status: 400 });
+      }
     }
 
     console.log('Creating channel with ownerId:', userId);
@@ -127,7 +147,7 @@ export async function POST(req: NextRequest) {
           }
         }
       },
-      include: { 
+      include: {
         owner: {
           select: { id: true, name: true, email: true }
         },
@@ -137,16 +157,24 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Jeśli eventId jest podane, połącz kanał z eventem
+    if (eventId) {
+      await prisma.event.update({
+        where: { id: eventId },
+        data: { channelId: channel.id }
+      });
+    }
+
     console.log('Channel created successfully:', channel.id);
     return NextResponse.json(channel, { status: 201 });
 
   } catch (error: any) {
     console.error('POST /api/channels error:', error);
     console.error('Error message:', error.message);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       error: 'Failed to create channel',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 }

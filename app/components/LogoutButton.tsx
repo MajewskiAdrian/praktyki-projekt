@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { clearLocation } from '@/lib/locationStore';
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -9,7 +10,7 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     if (loading) return;
-    
+
     setLoading(true);
     try {
       const res = await fetch("/api/logout", {
@@ -18,6 +19,12 @@ export default function LogoutButton() {
       });
 
       if (res.ok) {
+        // clear client-side stored location on logout so next user won't inherit it
+        try {
+          clearLocation();
+        } catch (err) {
+          // ignore
+        }
         router.push("/login");
         router.refresh();
       } else {

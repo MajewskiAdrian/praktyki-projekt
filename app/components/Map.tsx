@@ -11,6 +11,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import LocationSearch from "./LocationSearch";
+import { getLocation, subscribe, setLocation } from '@/lib/locationStore';
 
 // Własne ikony
 const customIcon = L.icon({
@@ -79,7 +80,15 @@ function MapController({ center }: { center: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.flyTo(center, 16, { duration: 1.5 });
+      try {
+        // keep current zoom (don't change zoom level), only move center
+        const currentZoom = map.getZoom();
+        // use flyTo for smooth movement but keep same zoom
+        map.flyTo(center, currentZoom, { duration: 1.0 });
+      } catch (e) {
+        // fallback to setView if flyTo fails
+        try { map.setView(center); } catch (err) { /* ignore */ }
+      }
     }
   }, [center, map]);
   return null;
@@ -123,7 +132,14 @@ export default function Map({
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(null);
+  const [centerLocation, setCenterLocation] = useState<[number, number] | null>(() => {
+    try {
+      const saved = getLocation();
+      return saved ? [saved.lat, saved.lng] : null;
+    } catch {
+      return null;
+    }
+  });
   const markerRef = useRef<L.Marker | null>(null);
   const markerRefs = useRef<{ [key: number]: L.Marker }>({});
 
@@ -167,12 +183,49 @@ export default function Map({
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    fetch("/api/users/profile")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user) setProfile(data.user);
-      })
-      .catch((err) => console.error("Failed to fetch profile:", err));
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/users/profile', { credentials: 'include' });
+        if (!res.ok) {
+          if (res.status !== 401) {
+            const text = await res.text().catch(() => '');
+            console.error('Failed to fetch profile:', res.status, text);
+          }
+          return null;
+        }
+        const data = await res.json().catch(() => null);
+        if (data?.user) {
+          setProfile(data.user);
+          const u = data.user as any;
+          if (typeof u.latitude === 'number' && typeof u.longitude === 'number') {
+            try {
+              setLocation({ lat: u.latitude, lng: u.longitude });
+            } catch (err) {
+              // ignore
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+      }
+    };
+
+    // initial fetch
+    fetchProfile();
+
+    // if login just happened in previous page, signal via sessionStorage to retry fetch
+    try {
+      const shouldFetch = sessionStorage.getItem('app:fetchProfileAfterLogin');
+      if (shouldFetch) {
+        sessionStorage.removeItem('app:fetchProfileAfterLogin');
+        // schedule a retry after a short delay so cookies have time to be applied
+        setTimeout(() => {
+          fetchProfile();
+        }, 300);
+      }
+    } catch (e) {
+      // ignore
+    }
   }, []);
 
   const handleEventAdded = (newEvent: MyEvent) => {
@@ -207,6 +260,19 @@ export default function Map({
       setMarkerPosition([searchLocation.lat, searchLocation.lng]);
     }
   }, [searchLocation]);
+
+  // subscribe to client-side location updates (localStorage / BroadcastChannel)
+  useEffect(() => {
+    const unsub = subscribe((loc) => {
+      try { console.debug && console.debug('Map received location update', loc); } catch (e) { }
+      if (loc) {
+        setCenterLocation([loc.lat, loc.lng]);
+        // do not create a marker by default when centering from stored location
+        // markerPosition is only set when user explicitly picks a marker or searchLocation prop is used
+      }
+    });
+    return unsub;
+  }, []);
 
   function LocationPicker({
     onSelect,
@@ -243,7 +309,7 @@ export default function Map({
         />
       </div>
       <MapContainer
-        center={[54.352, 18.6466]}
+        center={centerLocation ?? [54.352, 18.6466]}
         zoom={11}
         scrollWheelZoom={true}
         className="w-full h-full rounded-lg z-0"
