@@ -14,9 +14,7 @@ export default function DisplayPanel() {
         )
           return "dark";
       }
-    } catch {
-      // ignore
-    }
+    } catch { }
     return "light";
   };
 
@@ -25,7 +23,6 @@ export default function DisplayPanel() {
     getInitialTheme
   );
 
-  // Zastosuj motyw natychmiast przy montowaniu i przy każdej zmianie
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -35,7 +32,6 @@ export default function DisplayPanel() {
     }
   }, [theme]);
 
-  // Pobierz motyw z API (ale nie nadpisuj, jeśli localStorage jest aktualny)
   useEffect(() => {
     async function fetchTheme() {
       try {
@@ -46,7 +42,6 @@ export default function DisplayPanel() {
         });
         const data = await res.json();
         if (data.theme) {
-          // Tylko zaktualizuj, jeśli różni się od localStorage
           const localTheme = localStorage.getItem("theme");
           if (localTheme !== data.theme) {
             setTheme(data.theme);
@@ -57,7 +52,7 @@ export default function DisplayPanel() {
           }
         }
       } catch (err) {
-        console.error("Nie udało się pobrać motywu:", err);
+        console.error("Failed to fetch theme:", err);
       }
     }
     fetchTheme();
@@ -85,60 +80,67 @@ export default function DisplayPanel() {
         try {
           localStorage.setItem("theme", data.theme);
         } catch { }
-        alert(`Zapisano motyw: ${data.theme}`);
+        alert(`Theme saved: ${data.theme}`);
       } else console.warn("PATCH response:", data);
     } catch (err) {
-      console.error("Nie udało się zapisać motywu:", err);
+      console.error("Failed to save theme:", err);
     }
   };
 
   return (
-    <section>
-      <h2 className="text-2xl font-semibold text-black mb-2 dark:text-gray-200">
-        Display Settings
-      </h2>
+    <section className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Display</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Customize the appearance of the application
+        </p>
+      </div>
 
-      <div className="p-4 rounded-md border bg-white flex items-center justify-between dark:border-gray-200 dark:bg-gray-700">
-        <div>
-          <div className="font-medium text-black dark:text-gray-200">
-            Appearance
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-300">
-            Toggle between light and dark mode.
-          </div>
-        </div>
+      <div className="space-y-4">
+        <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                Theme
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Switch between light and dark mode
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500 dark:text-gray-300">
-            Light
-          </span>
-          <button
-            onClick={() =>
-              setSelectedTheme(
-                selectedTheme === "dark" ? "light" : "dark"
-              )
-            }
-            className={`relative inline-flex h-7 w-11 items-center rounded-full transition-colors ${selectedTheme === "dark" ? "bg-gray-800" : "bg-gray-200"
-              }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${selectedTheme === "dark" ? "translate-x-5" : "translate-x-1"
-                }`}
-            />
-          </button>
-          <span className="text-xs text-gray-500 dark:text-gray-300">Dark</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Light
+              </span>
+              <button
+                onClick={() =>
+                  setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")
+                }
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${selectedTheme === "dark"
+                    ? "bg-amber-600"
+                    : "bg-gray-300"
+                  }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-lg ${selectedTheme === "dark" ? "translate-x-7" : "translate-x-1"
+                    }`}
+                />
+              </button>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Dark
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3 mt-6">
+      <div className="flex items-center justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={saveTheme}
-          className="px-4 py-2 bg-amber-600 text-white rounded-md"
+          className="px-6 py-2.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-medium"
         >
           Save changes
         </button>
-
-
       </div>
     </section>
   );
