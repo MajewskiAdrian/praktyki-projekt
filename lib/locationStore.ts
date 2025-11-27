@@ -42,6 +42,7 @@ export function setLocation(loc: Loc) {
 }
 
 export function clearLocation() {
+    try { console.debug && console.debug('locationStore.clearLocation'); } catch (e) { }
     setLocation(null);
 }
 

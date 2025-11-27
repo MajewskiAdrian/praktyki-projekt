@@ -14,33 +14,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                try {
-                  const theme = document.cookie.split('; ').find(row => row.startsWith('theme='));
-                  if (theme) {
-                    const value = theme.split('=')[1];
-                    if (value === 'dark') {
-                      document.documentElement.classList.add('dark');
-                    } else {
-                      document.documentElement.classList.remove('dark');
-                    }
-                  }
-                } catch (e) {}
-              })();
+              try {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
             `,
           }}
         />
       </head>
-      <body className={`${inter.className} h-full`}>
+      <body className="h-full">
         {children}
       </body>
     </html>

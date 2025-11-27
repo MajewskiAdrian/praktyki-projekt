@@ -9,8 +9,8 @@ export default function DisplayPanel() {
       if (typeof document !== "undefined") {
         if (document.documentElement.classList.contains("dark")) return "dark";
         if (
-          (window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches)
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
         )
           return "dark";
       }
@@ -25,21 +25,36 @@ export default function DisplayPanel() {
     getInitialTheme
   );
 
+  // Zastosuj motyw natychmiast przy montowaniu i przy każdej zmianie
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme]);
+
+  // Pobierz motyw z API (ale nie nadpisuj, jeśli localStorage jest aktualny)
   useEffect(() => {
     async function fetchTheme() {
       try {
-        const token = localStorage.getItem("token"); // jeśli token trzymasz w localStorage
+        const token = localStorage.getItem("token");
         const res = await fetch("/api/users/theme", {
           method: "GET",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         const data = await res.json();
         if (data.theme) {
-          setTheme(data.theme);
-          setSelectedTheme(data.theme);
-          try {
-            localStorage.setItem("theme", data.theme);
-          } catch {}
+          // Tylko zaktualizuj, jeśli różni się od localStorage
+          const localTheme = localStorage.getItem("theme");
+          if (localTheme !== data.theme) {
+            setTheme(data.theme);
+            setSelectedTheme(data.theme);
+            try {
+              localStorage.setItem("theme", data.theme);
+            } catch { }
+          }
         }
       } catch (err) {
         console.error("Nie udało się pobrać motywu:", err);
@@ -49,13 +64,6 @@ export default function DisplayPanel() {
   }, []);
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
-  }, [theme]);
-
-  useEffect(() => {
-    // jeśli theme zmieni się z zewnątrz, zaktualizuj selectedTheme (anuluje lokalne zmiany)
     setSelectedTheme(theme);
   }, [theme]);
 
@@ -72,12 +80,11 @@ export default function DisplayPanel() {
       });
       const data = await res.json();
       if (data.success) {
-        // dopiero teraz zastosuj motyw globalnie
         setTheme(data.theme);
         setSelectedTheme(data.theme);
         try {
           localStorage.setItem("theme", data.theme);
-        } catch {}
+        } catch { }
         alert(`Zapisano motyw: ${data.theme}`);
       } else console.warn("PATCH response:", data);
     } catch (err) {
@@ -106,15 +113,17 @@ export default function DisplayPanel() {
             Light
           </span>
           <button
-            onClick={() => setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")}
-            className={`relative inline-flex h-7 w-11 items-center rounded-full transition-colors ${
-              selectedTheme === "dark" ? "bg-gray-800" : "bg-gray-200"
-            }`}
+            onClick={() =>
+              setSelectedTheme(
+                selectedTheme === "dark" ? "light" : "dark"
+              )
+            }
+            className={`relative inline-flex h-7 w-11 items-center rounded-full transition-colors ${selectedTheme === "dark" ? "bg-gray-800" : "bg-gray-200"
+              }`}
           >
             <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                selectedTheme === "dark" ? "translate-x-5" : "translate-x-1"
-              }`}
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${selectedTheme === "dark" ? "translate-x-5" : "translate-x-1"
+                }`}
             />
           </button>
           <span className="text-xs text-gray-500 dark:text-gray-300">Dark</span>
@@ -129,15 +138,7 @@ export default function DisplayPanel() {
           Save changes
         </button>
 
-        <button
-          className="px-4 py-2 bg-gray-100 rounded-md text-black"
-          onClick={() => {
-            // anuluj lokalny wybór i przywróć zapisaną wartość
-            setSelectedTheme(theme);
-          }}
-        >
-          Reset
-        </button>
+
       </div>
     </section>
   );

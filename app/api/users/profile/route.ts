@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
         bio: true,
         avatarUrl: true,
         city: true,
+        latitude: true,
+        longitude: true,
       },
     });
 
@@ -150,7 +152,7 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: decoded.id },
       data,
-      select: { id: true, name: true, email: true, trueName: true, bio: true, avatarUrl: true, city: true },
+      select: { id: true, name: true, email: true, trueName: true, bio: true, avatarUrl: true, city: true, latitude: true, longitude: true },
     });
 
     return NextResponse.json({ user: updated });
