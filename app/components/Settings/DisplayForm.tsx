@@ -80,7 +80,7 @@ export default function DisplayPanel() {
         try {
           localStorage.setItem("theme", data.theme);
         } catch { }
-        alert(`Theme saved: ${data.theme}`);
+        
       } else console.warn("PATCH response:", data);
     } catch (err) {
       console.error("Failed to save theme:", err);

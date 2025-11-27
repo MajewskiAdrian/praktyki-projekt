@@ -345,6 +345,11 @@ export default function Map({
               add: (e) => {
                 e.target.openPopup();
               },
+              // when the popup is closed (clicking the default 'x'),
+              // remove the temporary marker as well
+              popupclose: () => {
+                setMarkerPosition(null);
+              },
             }}
             icon={customIcon}
           >
