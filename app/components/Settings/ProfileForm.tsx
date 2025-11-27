@@ -39,7 +39,7 @@ export default function ProfileForm() {
 
         console.log("🔍 Raw avatarUrl from API:", user.avatarUrl); // DODAJ TO
 
-        const fullAvatarUrl = user.avatarUrl 
+        const fullAvatarUrl = user.avatarUrl
           ? (user.avatarUrl.startsWith('/') ? user.avatarUrl : `/${user.avatarUrl}`)
           : null;
 
@@ -84,7 +84,7 @@ export default function ProfileForm() {
       formData.append("name", username);
       formData.append("trueName", realName || "");
       formData.append("bio", bio || "");
-      
+
       if (avatarFile) {
         formData.append("avatar", avatarFile);
       }
@@ -97,11 +97,11 @@ export default function ProfileForm() {
         credentials: "include",
         body: formData, // BEZ Content-Type - przeglądarka ustawi z boundary
       });
-      
+
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || "Failed to save profile");
       const updated = json.user;
-      
+
       const fullAvatarUrl = updated.avatarUrl
         ? (updated.avatarUrl.startsWith('/') ? updated.avatarUrl : `/${updated.avatarUrl}`)
         : null;
@@ -182,7 +182,18 @@ export default function ProfileForm() {
               placeholder="Few words about you…"
             />
           </label>
-
+          {/* do zrobienia */}
+          {/*
+          <label className="block"> 
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">City</span>
+            <input
+              value={initial?.city || ""}
+              disabled
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-3 py-2 disabled:opacity-60"
+              placeholder="City (not editable)"
+            />
+          </label>
+// */}
           <label className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Avatar</span>
             <div className="mt-2 flex items-center gap-4">

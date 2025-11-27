@@ -5,14 +5,14 @@ import CircleMenu from '@/app/components/CircleMenu';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import Link from 'next/link';
-
+import Image from 'next/image';
 async function getCurrentUser() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    
+
     if (!token) return null;
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     return decoded.id || decoded.userId;
   } catch {
@@ -20,17 +20,17 @@ async function getCurrentUser() {
   }
 }
 
-export default async function ChannelPage({ 
-  params 
-}: { 
-  params: Promise<{ channelId: string }> 
+export default async function ChannelPage({
+  params
+}: {
+  params: Promise<{ channelId: string }>
 }) {
   const resolvedParams = await params;
   const userId = await getCurrentUser();
-  
+
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/channels/${resolvedParams.channelId}`,
-    { 
+    {
       cache: 'no-store',
       headers: userId ? { 'x-user-id': userId } : {}
     }
@@ -42,12 +42,8 @@ export default async function ChannelPage({
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Venn</span>
+
+              <Image src="/logo.png" alt="Venn Logo" width={100} height={40} />
             </div>
             <CircleMenu />
           </div>
@@ -61,8 +57,8 @@ export default async function ChannelPage({
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Channel not found</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">This channel doesn't exist or you don't have access to it.</p>
-            <Link 
-              href="/channels" 
+            <Link
+              href="/channels"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,17 +77,17 @@ export default async function ChannelPage({
   // Sprawdź czy użytkownik jest członkiem
   let isMember = false;
   let memberRole = null;
-  
+
   if (userId) {
     try {
       const memberRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/channels/${resolvedParams.channelId}/members`,
-        { 
+        {
           cache: 'no-store',
           headers: { 'x-user-id': userId }
         }
       );
-      
+
       if (memberRes.ok) {
         const members = await memberRes.json();
         const userMember = members.find((m: any) => m.user.id === userId);
@@ -111,12 +107,7 @@ export default async function ChannelPage({
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Venn</span>
+            <Image src="/logo.png" alt="Venn Logo" width={100} height={40} />
           </div>
           <CircleMenu />
         </div>
@@ -125,8 +116,8 @@ export default async function ChannelPage({
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Back Button */}
-        <Link 
-          href="/channels" 
+        <Link
+          href="/channels"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors mb-6"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,8 +131,8 @@ export default async function ChannelPage({
           <div className="flex items-start justify-between gap-6">
             <div className="flex items-start gap-4 flex-1">
               {channel.avatarUrl ? (
-                <img 
-                  src={channel.avatarUrl} 
+                <img
+                  src={channel.avatarUrl}
                   alt={channel.title}
                   className="w-20 h-20 rounded-full object-cover ring-4 ring-gray-100 dark:ring-gray-700 flex-shrink-0"
                 />
@@ -150,7 +141,7 @@ export default async function ChannelPage({
                   {channel.title.charAt(0).toUpperCase()}
                 </div>
               )}
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{channel.title}</h1>
@@ -191,11 +182,11 @@ export default async function ChannelPage({
                     </>
                   )}
                 </div>
-                
+
                 {channel.description && (
                   <p className="text-gray-600 dark:text-gray-400 mb-4">{channel.description}</p>
                 )}
-                
+
                 <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
                   <span className="flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,8 +213,8 @@ export default async function ChannelPage({
             {/* Follow Button */}
             {userId && userId !== channel.ownerId && (
               <div className="flex-shrink-0">
-                <FollowButton 
-                  channelId={resolvedParams.channelId} 
+                <FollowButton
+                  channelId={resolvedParams.channelId}
                   initialFollowing={isMember}
                 />
               </div>
@@ -241,8 +232,8 @@ export default async function ChannelPage({
             </div>
             <h3 className="text-xl font-bold text-amber-900 dark:text-amber-100 mb-2">Login Required</h3>
             <p className="text-amber-800 dark:text-amber-200 mb-6">Please log in to follow this channel and see messages</p>
-            <a 
-              href="/login" 
+            <a
+              href="/login"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition font-medium"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,8 +251,8 @@ export default async function ChannelPage({
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Join this channel</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">Follow this channel to see messages and participate in discussions</p>
-            <FollowButton 
-              channelId={resolvedParams.channelId} 
+            <FollowButton
+              channelId={resolvedParams.channelId}
               initialFollowing={false}
             />
           </div>

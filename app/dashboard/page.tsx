@@ -6,6 +6,8 @@ import CircleMenu from "@/app/components/CircleMenu";
 import EventData from "@/app/components/EventData";
 import EditEvent from "@/app/components/EditEventModal";
 import { Event } from "@/app/components/EventsList";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // typ dla profilu użytkownika
 interface UserProfile {
@@ -27,6 +29,7 @@ interface EventItem {
   neighborhood?: string | null;
   city?: string | null;
   createdAt: string;
+  channelId?: string | null;
 }
 
 interface Channel {
@@ -40,6 +43,8 @@ interface Channel {
 type CombinedEvent = EventItem & { source: "created" | "joined" };
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [createdEvents, setCreatedEvents] = useState<EventItem[] | null>(null);
   const [joinedEvents, setJoinedEvents] = useState<EventItem[] | null>(null);
@@ -244,6 +249,16 @@ export default function DashboardPage() {
     setOpenMenuId(null);
   };
 
+  const handleCreateChannelClick = (event: CombinedEvent) => {
+    // Encode event data in URL parameters
+    const params = new URLSearchParams({
+      eventId: event.id,
+      eventTitle: event.title,
+    });
+    router.push(`/channels/create?${params.toString()}`);
+    setOpenMenuId(null);
+  };
+
   const renderEventsList = (events: CombinedEvent[]) => {
     if (createdEvents === null || joinedEvents === null) {
       return (
@@ -265,6 +280,7 @@ export default function DashboardPage() {
       const isCreator = profile && event.creatorId === profile.id;
       const isMenuOpen = openMenuId === event.id;
       const isLoading = actionLoading === event.id;
+      const hasChannel = !!event.channelId;
 
       return (
         <div
@@ -281,14 +297,6 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <span>
-                  {/* {new Date(event.eventDate).toLocaleDateString("pl-PL", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}, {new Date(event.eventDate).toLocaleTimeString("pl-PL", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })} */}
                   {new Date(event.eventDate).toLocaleString("pl-PL", {
                     day: "2-digit",
                     month: "2-digit",
@@ -306,6 +314,18 @@ export default function DashboardPage() {
                   {locationNames[event.id] || `${event.latitude}, ${event.longitude}`}
                 </span>
               </div>
+
+              {hasChannel && (
+                <Link
+                  href={`/channels/${event.channelId}`}
+                  className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition text-sm font-medium"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Event Channel
+                </Link>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -351,6 +371,17 @@ export default function DashboardPage() {
                           </svg>
                           Edit Event
                         </button>
+                        {!hasChannel && (
+                          <button
+                            onClick={() => handleCreateChannelClick(event)}
+                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Create Channel
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteEvent(event.id)}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -451,12 +482,8 @@ export default function DashboardPage() {
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Venn</span>
+
+            <Image src="/logo.png" alt="Venn Logo" width={100} height={40} />
           </div>
           <CircleMenu />
         </div>
@@ -467,8 +494,8 @@ export default function DashboardPage() {
         {/* Action Message */}
         {actionMessage && (
           <div className={`mb-4 p-4 rounded-lg ${actionMessage.type === 'success'
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
             }`}>
             <div className="flex items-center gap-2">
               <span>{actionMessage.text}</span>
@@ -513,8 +540,8 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setActiveTab("all")}
                   className={`px-4 py-2 text-sm font-medium border-b-2 transition ${activeTab === "all"
-                      ? "border-amber-500 text-amber-600 dark:text-amber-400"
-                      : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    ? "border-amber-500 text-amber-600 dark:text-amber-400"
+                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                     }`}
                 >
                   Joined Events
@@ -522,8 +549,8 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setActiveTab("created")}
                   className={`px-4 py-2 text-sm font-medium border-b-2 transition ${activeTab === "created"
-                      ? "border-amber-500 text-amber-600 dark:text-amber-400"
-                      : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    ? "border-amber-500 text-amber-600 dark:text-amber-400"
+                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                     }`}
                 >
                   My Created

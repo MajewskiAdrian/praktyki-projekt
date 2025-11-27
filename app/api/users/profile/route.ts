@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         trueName: true,
         bio: true,
         avatarUrl: true, // <--- UPEWNIJ SIĘ, ŻE TO POLE JEST TUTAJ
+        city: true,
       },
     });
 
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest) {
     if (!decoded?.id) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
     const contentType = req.headers.get("content-type") || "";
-    
+
     let body: any = {};
     let avatarFile: File | null = null;
     let shouldRemoveAvatar = false;
@@ -137,10 +138,19 @@ export async function PATCH(req: NextRequest) {
       data.avatarUrl = `/avatars/${filename}`;
     }
 
+    // miasto
+    if (body.city !== undefined) {
+      if (typeof body.city !== "string" && body.city !== null) {
+        return NextResponse.json({ error: "Invalid city", field: "city" }, { status: 400 });
+      }
+      data.city = (body.city as string | null) ?? null;
+    }
+
+
     const updated = await prisma.user.update({
       where: { id: decoded.id },
       data,
-      select: { id: true, name: true, email: true, trueName: true, bio: true, avatarUrl: true },
+      select: { id: true, name: true, email: true, trueName: true, bio: true, avatarUrl: true, city: true },
     });
 
     return NextResponse.json({ user: updated });

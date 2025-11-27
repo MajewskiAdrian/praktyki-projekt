@@ -57,7 +57,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
             const fullEvent = eventsData.find((e: any) => String(e.id) === String(event.id));
             if (fullEvent) {
               setFullEventData(fullEvent);
-              
+
               if (userId && fullEvent.creatorId) {
                 const isEventCreator = String(fullEvent.creatorId) === String(userId);
                 setIsCreator(isEventCreator);
@@ -173,7 +173,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
               {event.description}
             </p>
           </div>
-          
+
           {normalizedTags.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
@@ -244,7 +244,7 @@ export default function EventData({ event, onClose }: EventDataProps) {
               })}
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
               Attendees ({attendees.length}{event.maxAttendees ? `/${event.maxAttendees}` : ''})

@@ -17,6 +17,10 @@ model User {
   trueName  String?
   bio       String?   @default("New account")
   avatarUrl String?
+  city         String?
+  latitude     Float?
+  longitude    Float?
+
 
   events    Event[]   @relation("CreatedEvents")
   attending Event[]   @relation("EventAttendees")

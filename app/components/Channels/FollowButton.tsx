@@ -25,7 +25,7 @@ export default function FollowButton({ channelId, initialFollowing = false }: Fo
       }
 
       setIsFollowing(!isFollowing);
-      
+
       // Refresh page to update member count
       window.location.reload();
     } catch (error: any) {
@@ -39,13 +39,12 @@ export default function FollowButton({ channelId, initialFollowing = false }: Fo
     <button
       onClick={handleFollow}
       disabled={loading}
-      className={`px-4 py-2 rounded font-medium transition-colors ${
-        isFollowing
+      className={`px-4 py-2 rounded font-medium transition-colors ${isFollowing
           ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           : 'bg-amber-600 text-white hover:bg-amber-700'
-      } disabled:opacity-50 disabled:cursor-not-allowed`}
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
     >
-      {loading ? 'Loading...' : isFollowing ? '✓ Following' : '+ Follow'}
+      {loading ? 'Loading...' : isFollowing ? 'Unfollow' : '+ Follow'}
     </button>
   );
 }
