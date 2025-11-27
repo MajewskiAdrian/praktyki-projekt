@@ -352,18 +352,20 @@ export default function Map({
                 style={{
                   filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
                 }}
-                className="text-center p-2"
+                className="text-center p-3"
               >
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 font-medium">
+                  Wybrano lokalizację
+                </p>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (markerPosition) {
                       onCreateEventClick(markerPosition[0], markerPosition[1]);
-                      // Usunięto: setMarkerPosition(null); - pinezka zostaje!
                     }
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition font-medium"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -398,10 +400,27 @@ export default function Map({
                 style={{
                   filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
                 }}
-                className="bg-white dark:bg-gray-700 p-4 rounded shadow hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+                className="bg-white dark:bg-black p-4 rounded-xl min-w-[200px]"
               >
-                <strong>{event.title}</strong>
-                <br />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                  {event.title}
+                </h3>
+
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>
+                    {event.eventDate &&
+                      new Date(event.eventDate).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </span>
+                </div>
 
                 <button
                   type="button"
@@ -414,22 +433,10 @@ export default function Map({
                       // ignore errors
                     }
                   }}
-                  className="mt-2 px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
+                  className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
-                  Details
+                  Zobacz szczegóły
                 </button>
-
-                <br />
-                <small>
-                  {event.eventDate &&
-                    new Date(event.eventDate).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                </small>
               </div>
             </Popup>
           </Marker>
