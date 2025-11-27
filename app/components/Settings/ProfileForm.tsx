@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import LocationSearch from "../LocationSearch";
 
 type UserDto = {
   id: string;
@@ -8,6 +9,9 @@ type UserDto = {
   trueName: string | null;
   bio: string | null;
   avatarUrl?: string | null; // NEW
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export default function ProfileForm() {
@@ -18,6 +22,23 @@ export default function ProfileForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
+
+  const [city, setCity] = useState<string | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [cityEditing, setCityEditing] = useState(false);
+  // store the original location when entering edit mode so Cancel can restore it
+  const [backupLocation, setBackupLocation] = useState<{
+    city: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null>(null);
+  // a candidate selection while editing (shows confirmation before apply)
+  const [editingCandidate, setEditingCandidate] = useState<{
+    city: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const [initial, setInitial] = useState<UserDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +71,9 @@ export default function ProfileForm() {
         setRealName(user.trueName || "");
         setBio(user.bio || "");
         setAvatarPreview(fullAvatarUrl);
+        setCity(user.city || null);
+        setLatitude(typeof user.latitude === 'number' ? user.latitude : null);
+        setLongitude(typeof user.longitude === 'number' ? user.longitude : null);
       } catch (e: any) {
         if (active) setError(e.message);
       } finally {
@@ -113,6 +137,25 @@ export default function ProfileForm() {
       setAvatarPreview(fullAvatarUrl);
       setAvatarFile(null);
       setRemoveAvatar(false);
+
+      // If location was changed (we keep it on client), send to separate endpoint
+      try {
+        if (city && typeof latitude === 'number' && typeof longitude === 'number') {
+          const locRes = await fetch('/api/users/location', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ city, latitude, longitude }),
+          });
+          // ignore failure for now but log
+          if (!locRes.ok) {
+            const errJson = await locRes.json().catch(() => ({}));
+            console.error('Failed to save location', errJson);
+          }
+        }
+      } catch (err) {
+        console.error('Location save error', err);
+      }
       setOk(true);
       setTimeout(() => setOk(false), 2000);
     } catch (e: any) {
@@ -128,6 +171,9 @@ export default function ProfileForm() {
     setRealName(initial.trueName || "");
     setBio(initial.bio || "");
     setAvatarPreview(initial.avatarUrl || null);
+    setCity(initial.city || null);
+    setLatitude(typeof initial.latitude === 'number' ? initial.latitude : null);
+    setLongitude(typeof initial.longitude === 'number' ? initial.longitude : null);
     setAvatarFile(null);
     setRemoveAvatar(false);
     setError(null);
@@ -183,17 +229,85 @@ export default function ProfileForm() {
             />
           </label>
           {/* do zrobienia */}
-          {/*
-          <label className="block"> 
+
+          <label className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">City</span>
-            <input
-              value={initial?.city || ""}
-              disabled
-              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-3 py-2 disabled:opacity-60"
-              placeholder="City (not editable)"
-            />
+            <div className="mt-2">
+              <div className="mt-2">
+                {!cityEditing ? (
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-gray-700 dark:text-gray-300">{city || <span className="text-gray-500">Not set</span>}</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // keep a backup so user can cancel
+                        setBackupLocation({ city, latitude, longitude });
+                        // reset candidate (user will choose)
+                        setEditingCandidate(null);
+                        setCityEditing(true);
+                      }}
+                      className="text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <LocationSearch
+                      onSelectLocation={(loc) => {
+                        // set candidate selection but do not auto-close — show visual confirmation
+                        setEditingCandidate({ city: loc.label, latitude: loc.lat, longitude: loc.lng });
+                      }}
+                    />
+
+                    {/* show selected candidate and actions */}
+                    <div className="mt-2">
+                      {editingCandidate ? (
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm text-gray-700 dark:text-gray-300">Selected: {editingCandidate.city}</div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // apply candidate to main state and close editor
+                              setCity(editingCandidate.city);
+                              setLatitude(editingCandidate.latitude);
+                              setLongitude(editingCandidate.longitude);
+                              setCityEditing(false);
+                              setBackupLocation(null);
+                              setEditingCandidate(null);
+                            }}
+                            className="px-3 py-1 rounded border bg-amber-600 text-white text-sm hover:bg-amber-700"
+                          >
+                            Apply
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // cancel editing and restore backup
+                              setCityEditing(false);
+                              if (backupLocation) {
+                                setCity(backupLocation.city);
+                                setLatitude(backupLocation.latitude);
+                                setLongitude(backupLocation.longitude);
+                              }
+                              setBackupLocation(null);
+                              setEditingCandidate(null);
+                            }}
+                            className="px-3 py-1 rounded border text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">Choose from results to select a location</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </label>
-// */}
+
           <label className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Avatar</span>
             <div className="mt-2 flex items-center gap-4">

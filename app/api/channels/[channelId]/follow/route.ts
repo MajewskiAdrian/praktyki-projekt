@@ -10,7 +10,7 @@ export async function POST(
   try {
     const params = await context.params;
     const userId = await verifyAuth(req);
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -49,9 +49,9 @@ export async function POST(
     });
 
     if (ban && (!ban.until || ban.until > new Date())) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'You are banned from this channel',
-        bannedUntil: ban.until 
+        bannedUntil: ban.until
       }, { status: 403 });
     }
 
@@ -71,12 +71,12 @@ export async function POST(
 
     console.log(`User ${userId} followed channel ${params.channelId}`);
     return NextResponse.json(member, { status: 201 });
-    
+
   } catch (error: any) {
     console.error('POST follow error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to follow channel',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 }
@@ -89,7 +89,7 @@ export async function DELETE(
   try {
     const params = await context.params;
     const userId = await verifyAuth(req);
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -110,8 +110,8 @@ export async function DELETE(
 
     // Nie pozwól ownerowi opuścić własnego kanału
     if (member.role === 'OWNER') {
-      return NextResponse.json({ 
-        error: 'Channel owner cannot unfollow their own channel' 
+      return NextResponse.json({
+        error: 'Channel owner cannot unfollow their own channel'
       }, { status: 403 });
     }
 
@@ -127,12 +127,12 @@ export async function DELETE(
 
     console.log(`User ${userId} unfollowed channel ${params.channelId}`);
     return NextResponse.json({ success: true });
-    
+
   } catch (error: any) {
     console.error('DELETE follow error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to unfollow channel',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 }

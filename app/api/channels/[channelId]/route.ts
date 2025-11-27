@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { verifyAuth } from '@/lib/auth';
-
 import { prisma } from '@/lib/prisma';
+import { verifyAuth } from '@/lib/auth';
 
 // GET /api/channels/:id
 export async function GET(
@@ -10,8 +8,7 @@ export async function GET(
   context: { params: Promise<{ channelId: string }> }
 ) {
   try {
-    const params = await context.params; // <-- UNWRAP Promise
-    const userId = req.headers.get('x-user-id'); // Opcjonalne, dla SSR
+    const params = await context.params;
 
     const channel = await prisma.channel.findUnique({
       where: { id: params.channelId },
@@ -38,9 +35,9 @@ export async function PATCH(
   context: { params: Promise<{ channelId: string }> }
 ) {
   try {
-    const params = await context.params; // <-- UNWRAP Promise
+    const params = await context.params;
     const userId = await verifyAuth(req);
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -49,7 +46,11 @@ export async function PATCH(
       where: { id: params.channelId }
     });
 
-    if (channel?.ownerId !== userId) {
+    if (!channel) {
+      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+    }
+
+    if (channel.ownerId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -73,28 +74,44 @@ export async function DELETE(
   context: { params: Promise<{ channelId: string }> }
 ) {
   try {
-    const params = await context.params; // <-- UNWRAP Promise
+    const params = await context.params;
     const userId = await verifyAuth(req);
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const channelId = params.channelId;
+
     const channel = await prisma.channel.findUnique({
-      where: { id: params.channelId }
+      where: { id: channelId },
+      select: { ownerId: true }
     });
 
-    if (channel?.ownerId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!channel) {
+      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+    }
+
+    if (channel.ownerId !== userId) {
+      return NextResponse.json(
+        { error: 'Only the channel owner can delete this channel' },
+        { status: 403 }
+      );
     }
 
     await prisma.channel.delete({
-      where: { id: params.channelId }
+      where: { id: channelId }
     });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('DELETE /api/channels/[channelId] error:', error);
-    return NextResponse.json({ error: 'Failed to delete channel' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Channel deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error('Error deleting channel:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete channel' },
+      { status: 500 }
+    );
   }
 }

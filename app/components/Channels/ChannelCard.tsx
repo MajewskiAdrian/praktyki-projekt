@@ -1,4 +1,7 @@
+"use client";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 interface Channel {
   id: string;
@@ -20,15 +23,72 @@ interface Channel {
 }
 
 export default function ChannelCard({ channel }: { channel: Channel }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/users/profile', {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log('Full response:', data);
+          console.log('Current user ID:', data.user?.id);
+          console.log('Channel owner ID:', channel.owner.id);
+          console.log('Is owner?', data.user?.id === channel.owner.id);
+          setCurrentUserId(data.user?.id || null);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    }
+    fetchUser();
+  }, [channel.owner.id]);
+
+  const isOwner = currentUserId === channel.owner.id;
   const userRole = channel.members?.[0]?.role;
+
+  console.log('Render - isOwner:', isOwner, 'currentUserId:', currentUserId, 'ownerId:', channel.owner.id);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm('Are you sure you want to delete this channel? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/channels/${channel.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to delete channel');
+      }
+
+      router.refresh();
+    } catch (error: any) {
+      console.error('Error deleting channel:', error);
+      alert(error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Link href={`/channels/${channel.id}`}>
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-amber-500 dark:hover:border-amber-500 cursor-pointer h-full flex flex-col group">
         <div className="flex items-start gap-4 mb-4">
           {channel.avatarUrl ? (
-            <img 
-              src={channel.avatarUrl} 
+            <img
+              src={channel.avatarUrl}
               alt={channel.title}
               className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-amber-500 transition-all"
             />
@@ -37,7 +97,7 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
               {channel.title.charAt(0).toUpperCase()}
             </div>
           )}
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
@@ -52,7 +112,7 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
                 </span>
               )}
             </div>
-            
+
             {userRole && (
               <div className="flex gap-2 mb-2">
                 {userRole === 'OWNER' && (
@@ -75,13 +135,13 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
             )}
           </div>
         </div>
-        
+
         {channel.description && (
           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
             {channel.description}
           </p>
         )}
-        
+
         <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span className="flex items-center gap-1.5">
@@ -101,6 +161,16 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
             by {channel.owner.name}
           </span>
         </div>
+
+        {isOwner && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="mt-3 w-full text-sm bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-2 rounded-lg transition"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Channel'}
+          </button>
+        )}
       </div>
     </Link>
   );

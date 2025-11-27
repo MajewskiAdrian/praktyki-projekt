@@ -44,16 +44,23 @@ model Event {
   longitude    Float
   eventDate    DateTime
   maxAttendees Int?
-  creatorId    String
-  creator      User      @relation("CreatedEvents", fields: [creatorId], references: [id])
-  attendees    User[]    @relation("EventAttendees")
-  tags         Tag[]     @relation("EventTags")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  creatorId  String
+  creator    User      @relation("CreatedEvents", fields: [creatorId], references: [id])
+  attendees  User[]    @relation("EventAttendees")
+  tags       Tag[]     @relation("EventTags")
+
+  // RELACJA 1:1
+  channelId  String?   @unique
+  channel    Channel?  @relation(fields: [channelId], references: [id])
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([eventDate])
   @@index([latitude, longitude])
 }
+
 
 model Tag {
   id     Int     @id @default(autoincrement())
@@ -77,6 +84,9 @@ model Channel {
   members  ChannelMember[]
   messages Message[]
   bans     ChannelBan[]
+
+  // RELACJA 1:1 — odwrotna strona
+  event     Event?
 
   @@index([ownerId])
   @@index([isPublic])

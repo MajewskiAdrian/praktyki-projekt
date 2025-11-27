@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         email: true,
         trueName: true,
         bio: true,
-        avatarUrl: true, // <--- UPEWNIJ SIĘ, ŻE TO POLE JEST TUTAJ
+        avatarUrl: true,
         city: true,
       },
     });
