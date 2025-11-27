@@ -33,12 +33,8 @@ export default function ProfileForm() {
     latitude: number | null;
     longitude: number | null;
   } | null>(null);
-  // a candidate selection while editing (shows confirmation before apply)
-  const [editingCandidate, setEditingCandidate] = useState<{
-    city: string;
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  // no candidate/apply flow — selecting an item will immediately set city and close editor
+  const [searchKey, setSearchKey] = useState<number | null>(null);
 
   const [initial, setInitial] = useState<UserDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -242,8 +238,8 @@ export default function ProfileForm() {
                       onClick={() => {
                         // keep a backup so user can cancel
                         setBackupLocation({ city, latitude, longitude });
-                        // reset candidate (user will choose)
-                        setEditingCandidate(null);
+                        // bump key so LocationSearch mounts fresh for this edit session
+                        setSearchKey(Date.now());
                         setCityEditing(true);
                       }}
                       className="text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -254,53 +250,38 @@ export default function ProfileForm() {
                 ) : (
                   <div>
                     <LocationSearch
+                      key={searchKey ?? undefined}
+                      initialQuery={city || ''}
                       onSelectLocation={(loc) => {
-                        // set candidate selection but do not auto-close — show visual confirmation
-                        setEditingCandidate({ city: loc.label, latitude: loc.lat, longitude: loc.lng });
+                        // immediately apply selection, close editor and clear backup
+                        setCity(loc.label);
+                        setLatitude(loc.lat);
+                        setLongitude(loc.lng);
+                        setCityEditing(false);
+                        setBackupLocation(null);
+                        // clear key to unmount the search component
+                        setSearchKey(null);
                       }}
                     />
-
-                    {/* show selected candidate and actions */}
-                    <div className="mt-2">
-                      {editingCandidate ? (
-                        <div className="flex items-center gap-3">
-                          <div className="text-sm text-gray-700 dark:text-gray-300">Selected: {editingCandidate.city}</div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // apply candidate to main state and close editor
-                              setCity(editingCandidate.city);
-                              setLatitude(editingCandidate.latitude);
-                              setLongitude(editingCandidate.longitude);
-                              setCityEditing(false);
-                              setBackupLocation(null);
-                              setEditingCandidate(null);
-                            }}
-                            className="px-3 py-1 rounded border bg-amber-600 text-white text-sm hover:bg-amber-700"
-                          >
-                            Apply
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              // cancel editing and restore backup
-                              setCityEditing(false);
-                              if (backupLocation) {
-                                setCity(backupLocation.city);
-                                setLatitude(backupLocation.latitude);
-                                setLongitude(backupLocation.longitude);
-                              }
-                              setBackupLocation(null);
-                              setEditingCandidate(null);
-                            }}
-                            className="px-3 py-1 rounded border text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-500">Choose from results to select a location</div>
-                      )}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // cancel editing and restore backup
+                          // hide the search immediately and restore backup
+                          setCityEditing(false);
+                          setSearchKey(null);
+                          if (backupLocation) {
+                            setCity(backupLocation.city);
+                            setLatitude(backupLocation.latitude);
+                            setLongitude(backupLocation.longitude);
+                          }
+                          setBackupLocation(null);
+                        }}
+                        className="px-3 py-1 rounded border text-sm bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}

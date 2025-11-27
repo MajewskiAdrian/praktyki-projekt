@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type Location = {
   id: string | number;
@@ -11,13 +11,20 @@ type Location = {
 
 type Props = {
   onSelectLocation: (loc: Location) => void;
+  initialQuery?: string;
 };
 
-export default function LocationSearch({ onSelectLocation }: Props) {
+export default function LocationSearch({ onSelectLocation, initialQuery }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // sync initial query when parent opens editor or provides a value
+  // (keeps the input prefilled with current city)
+  useEffect(() => {
+    if (typeof initialQuery === 'string') setQuery(initialQuery);
+  }, [initialQuery]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

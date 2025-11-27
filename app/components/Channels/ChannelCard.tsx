@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Channel {
   id: string;
@@ -26,6 +26,8 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -35,10 +37,6 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
         });
         if (res.ok) {
           const data = await res.json();
-          console.log('Full response:', data);
-          console.log('Current user ID:', data.user?.id);
-          console.log('Channel owner ID:', channel.owner.id);
-          console.log('Is owner?', data.user?.id === channel.owner.id);
           setCurrentUserId(data.user?.id || null);
         }
       } catch (error) {
@@ -48,15 +46,26 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
     fetchUser();
   }, [channel.owner.id]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setShowSettings(false);
+      }
+    }
+
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettings]);
+
   const isOwner = currentUserId === channel.owner.id;
   const userRole = channel.members?.[0]?.role;
 
-  console.log('Render - isOwner:', isOwner, 'currentUserId:', currentUserId, 'ownerId:', channel.owner.id);
-
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this channel? This action cannot be undone.')) {
       return;
     }
@@ -82,9 +91,48 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
     }
   };
 
+  const toggleSettings = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowSettings(!showSettings);
+  };
+
   return (
     <Link href={`/channels/${channel.id}`}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-amber-500 dark:hover:border-amber-500 cursor-pointer h-full flex flex-col group">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-amber-500 dark:hover:border-amber-500 cursor-pointer h-full flex flex-col group relative">
+        {isOwner && (
+          <div className="absolute top-4 right-4" ref={settingsRef}>
+            <button
+              onClick={toggleSettings}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+              title="Settings"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+
+            {showSettings && (
+              <div className="absolute top-10 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[150px]">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  disabled={isDeleting}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-2 disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {isDeleting ? 'Deleting...' : 'Delete Channel'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-start gap-4 mb-4">
           {channel.avatarUrl ? (
             <img
@@ -161,16 +209,6 @@ export default function ChannelCard({ channel }: { channel: Channel }) {
             by {channel.owner.name}
           </span>
         </div>
-
-        {isOwner && (
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="mt-3 w-full text-sm bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-2 rounded-lg transition"
-          >
-            {isDeleting ? 'Deleting...' : 'Delete Channel'}
-          </button>
-        )}
       </div>
     </Link>
   );
