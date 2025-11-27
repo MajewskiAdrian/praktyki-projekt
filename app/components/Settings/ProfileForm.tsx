@@ -328,6 +328,7 @@ export default function ProfileForm() {
           ) : (
             <div className="space-y-3">
               <LocationSearch
+                endpoint="/api/users/geocode-city"
                 key={searchKey ?? undefined}
                 initialQuery={city || ''}
                 onSelectLocation={(loc) => {

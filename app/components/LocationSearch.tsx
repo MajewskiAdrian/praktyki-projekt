@@ -12,16 +12,15 @@ type Location = {
 type Props = {
   onSelectLocation: (loc: Location) => void;
   initialQuery?: string;
+  endpoint: string; // <--- NOWE
 };
 
-export default function LocationSearch({ onSelectLocation, initialQuery }: Props) {
+export default function LocationSearch({ onSelectLocation, initialQuery, endpoint }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // sync initial query when parent opens editor or provides a value
-  // (keeps the input prefilled with current city)
   useEffect(() => {
     if (typeof initialQuery === 'string') setQuery(initialQuery);
   }, [initialQuery]);
@@ -33,7 +32,7 @@ export default function LocationSearch({ onSelectLocation, initialQuery }: Props
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`); // <--- TU
       if (!res.ok) {
         throw new Error('Request failed');
       }
