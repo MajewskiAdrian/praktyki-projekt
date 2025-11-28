@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 
 export async function GET(
   req: Request,
-  { params }: { params: { eventId: string } }
+  context: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const params = await context.params;
     const { eventId } = params;
     const event = await prisma.event.findUnique({
       where: { id: Number(eventId) },
@@ -37,8 +38,9 @@ export async function GET(
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { eventId: string } }) {
+export async function PUT(req: Request, context: { params: Promise<{ eventId: string }> }) {
   try {
+  const params = await context.params;
   const { eventId } = params;
   console.log("PUT /api/events/[eventId] called, params.eventId=", eventId);
   const body = await req.json();

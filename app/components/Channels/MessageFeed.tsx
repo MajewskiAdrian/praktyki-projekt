@@ -9,8 +9,8 @@ interface Message {
   content: any;
   createdAt: string;
   author: { id: string; name: string };
-  reactions: Array<{ emoji: string; user: { id: string } }>;
-  pollVotes?: Array<{ optionId: string; user: { id: string } }>;
+  reactions: Array<{ emoji: string; user: { id: string; name: string } }>;
+  pollVotes?: Array<{ optionId: string; user: { id: string; name: string } }>;
 }
 
 export default function MessageFeed({ channelId }: { channelId: string }) {

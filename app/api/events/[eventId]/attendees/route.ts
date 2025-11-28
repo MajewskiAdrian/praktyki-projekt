@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request, { params }: { params: { eventId: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ eventId: string }> }) {
   try {
+    const params = await context.params;
     // params may be empty in some dev runtimes — fall back to parsing URL
     console.log("attendees route called; params:", params);
     let eventId = params?.eventId ?? null;
