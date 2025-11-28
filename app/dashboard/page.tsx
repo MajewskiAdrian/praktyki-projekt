@@ -261,8 +261,8 @@ export default function DashboardPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          title: `${event.title} - Channel`,
-          description: `Discussion channel for: ${event.description}`,
+          title: `${event.title}`,
+          description: `Channel for: ${event.title}`,
           isPublic: true,
           eventId: event.id
         }),
@@ -511,13 +511,79 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openMenuId]);
 
+  // Calculate upcoming event
+  const upcomingEvent = (() => {
+    const now = new Date();
+    const futureEvents = combinedEvents.filter(event => new Date(event.eventDate) > now);
+    
+    if (futureEvents.length === 0) return null;
+    
+    return futureEvents.sort((a, b) => 
+      new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+    )[0];
+  })();
+
+  // Upcoming Event Card Component
+  const UpcomingEventCard = () => {
+    if (!upcomingEvent) return null;
+
+    return (
+      <div className="bg-gradient-to-br from-amber-500 to-purple-500 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold">Upcoming Event</h3>
+        </div>
+        
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-3">
+          <h4 className="font-semibold text-lg mb-2">{upcomingEvent.title}</h4>
+          <div className="flex items-center gap-2 text-sm mb-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>
+              {new Date(upcomingEvent.eventDate).toLocaleString("pl-PL", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+          <div className="flex items-start gap-2 text-sm">
+            <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="break-words">
+              {locationNames[upcomingEvent.id] || `${upcomingEvent.latitude}, ${upcomingEvent.longitude}`}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setSelectedEvent(upcomingEvent as any)}
+          className="w-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 backdrop-blur-sm font-medium py-2 px-4 rounded-lg transition flex items-center justify-center gap-2"
+        >
+          View Details
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-
             <Image src="/logo.png" alt="Venn Logo" width={100} height={40} />
           </div>
           <CircleMenu />
@@ -546,6 +612,11 @@ export default function DashboardPage() {
           <p className="text-gray-600 dark:text-gray-400">
             Manage your events and followed channels here.
           </p>
+        </div>
+
+        {/* Upcoming Event Card - Mobile Only - Na górze */}
+        <div className="lg:hidden mb-6">
+          <UpcomingEventCard />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -601,6 +672,11 @@ export default function DashboardPage() {
 
           {/* Followed Channels Section - 1 column on large screens */}
           <div className="space-y-6">
+            {/* Upcoming Event Card - Desktop Only */}
+            <div className="hidden lg:block">
+              <UpcomingEventCard />
+            </div>
+
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -654,13 +730,13 @@ export default function DashboardPage() {
 
       {/* Event Details Popup */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 h-fit-content flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setSelectedEvent(null)}
           />
 
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fadeIn">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-fadeIn">
             <EventData
               event={selectedEvent}
               onClose={() => setSelectedEvent(null)}

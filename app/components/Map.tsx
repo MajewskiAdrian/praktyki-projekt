@@ -119,6 +119,7 @@ interface MapProps {
   onLocationSearch: (loc: { lat: number; lng: number }) => void;
   onEventClick: (event: MyEvent) => void;
   onCreateEventClick: (lat: number, lng: number) => void;
+  refreshKey?: number;
 }
 
 export default function Map({
@@ -128,6 +129,7 @@ export default function Map({
   searchLocation,
   onEventClick,
   onCreateEventClick,
+  refreshKey,
 }: MapProps) {
   const [mounted, setMounted] = useState(false);
   const [events, setEvents] = useState<MyEvent[]>([]);
@@ -238,6 +240,14 @@ export default function Map({
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Reload events when parent signals a refresh (e.g. after creating an event)
+  useEffect(() => {
+    if (typeof refreshKey !== 'undefined') {
+      loadEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   useEffect(() => {
     if (focusedEventId) {

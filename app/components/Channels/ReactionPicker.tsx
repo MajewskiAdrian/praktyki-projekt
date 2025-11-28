@@ -81,7 +81,7 @@ export default function ReactionPicker({
       onMouseLeave={handleMouseLeave}
     >
       <button 
-        className="text-gray-400 hover:text-gray-600 px-2 py-1 text-sm transition-colors"
+        className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 px-2 py-1 text-sm transition-colors"
         disabled={loading}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -90,7 +90,7 @@ export default function ReactionPicker({
       
       {isOpen && (
         <div 
-          className="absolute bottom-full left-0 mb-2 bg-white border rounded-lg shadow-xl p-2 z-50"
+          className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-2 z-50"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -100,7 +100,7 @@ export default function ReactionPicker({
                 key={emoji}
                 onClick={() => addReaction(emoji)}
                 disabled={loading}
-                className="hover:bg-gray-100 active:bg-gray-200 p-2 rounded text-xl transition-all hover:scale-125 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 p-2 rounded text-xl transition-all hover:scale-125 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={`React with ${emoji}`}
               >
                 {emoji}

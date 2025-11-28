@@ -7,16 +7,48 @@ async function cleanupOldEvents() {
   try {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
-    const deletedEvents = await prisma.event.deleteMany({
+    // Najpierw znajdź eventy do usunięcia wraz z ich channelId
+    const eventsToDelete = await prisma.event.findMany({
       where: {
         eventDate: {
           lt: twentyFourHoursAgo,
         },
       },
+      select: {
+        id: true,
+        channelId: true,
+      },
     });
 
-    if (deletedEvents.count > 0) {
-      console.log(`🗑️ Cleaned up ${deletedEvents.count} old events`);
+    if (eventsToDelete.length > 0) {
+      // Zbierz channelId z eventów, które będą usunięte
+      const channelIds = eventsToDelete
+        .filter(e => e.channelId !== null)
+        .map(e => e.channelId as string);
+
+      // Usuń eventy
+      const deletedEvents = await prisma.event.deleteMany({
+        where: {
+          eventDate: {
+            lt: twentyFourHoursAgo,
+          },
+        },
+      });
+
+      // Usuń powiązane channele
+      if (channelIds.length > 0) {
+        const deletedChannels = await prisma.channel.deleteMany({
+          where: {
+            id: {
+              in: channelIds,
+            },
+          },
+        });
+        
+        console.log(`🗑️ Cleaned up ${deletedEvents.count} old events and ${deletedChannels.count} associated channels`);
+      } else {
+        console.log(`🗑️ Cleaned up ${deletedEvents.count} old events`);
+      }
     }
   } catch (error) {
     console.error("❌ Error cleaning up old events:", error);

@@ -2,6 +2,52 @@
 
 import { useState } from 'react';
 
+// Small inline SVG icons to avoid adding a dependency. They accept a `className` prop
+// so Tailwind classes can control size/color.
+const IconChat = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M21 12c0 4.97-4.03 9-9 9a8.96 8.96 0 01-4.95-1.49L3 21l1.49-3.06A8.96 8.96 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9 9z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconMegaphone = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M3 11v2a2 2 0 002 2h1l6 3V6L6 9H5a2 2 0 00-2 2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 8a4 4 0 010 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconPoll = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M7 20V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 20V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M17 20v-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconImage = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M8 14l2.5-3 3.5 4.5 2.5-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="9" cy="9" r="1" fill="currentColor" />
+  </svg>
+);
+
+const IconWarning = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M12 9v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 17h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10.29 3.86L2.82 18.14A2 2 0 004.61 21h14.78a2 2 0 001.79-2.86L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconX = ({ className = '' }: any) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 type MessageType = 'TEXT' | 'ANNOUNCEMENT' | 'POLL' | 'IMAGE';
 
 export default function SendMessageForm({ channelId }: { channelId: string }) {
@@ -117,7 +163,8 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          💬 Text
+          <IconChat className="inline-block w-4 h-4 mr-2" />
+          Text
         </button>
         <button
           type="button"
@@ -128,7 +175,8 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          📢 Announcement
+          <IconMegaphone className="inline-block w-4 h-4 mr-2" />
+          Announcement
         </button>
         <button
           type="button"
@@ -139,7 +187,8 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          📊 Poll
+          <IconPoll className="inline-block w-4 h-4 mr-2" />
+          Poll
         </button>
         <button
           type="button"
@@ -150,7 +199,8 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
           }`}
         >
-          🖼️ Image
+          <IconImage className="inline-block w-4 h-4 mr-2" />
+          Image
         </button>
       </div>
 
@@ -220,8 +270,9 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
 
             {/* Error message for invalid image */}
             {imageUrl && imagePreviewError && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded text-sm">
-                ⚠️ Cannot load image preview. Make sure the URL is correct and publicly accessible.
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-3 py-2 rounded text-sm flex items-start gap-2">
+                <IconWarning className="w-4 h-4 mt-0.5" />
+                <div>Cannot load image preview. Make sure the URL is correct and publicly accessible.</div>
               </div>
             )}
           </div>
@@ -270,9 +321,10 @@ export default function SendMessageForm({ channelId }: { channelId: string }) {
                         onClick={() => {
                           setPollOptions(pollOptions.filter((_, idx) => idx !== i));
                         }}
-                        className="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                        className="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors flex items-center"
+                        aria-label={`Remove option ${i + 1}`}
                       >
-                        ✕
+                        <IconX className="w-4 h-4" />
                       </button>
                     )}
                   </div>

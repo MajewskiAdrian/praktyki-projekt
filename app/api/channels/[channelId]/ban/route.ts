@@ -65,9 +65,10 @@ export async function POST(
 // DELETE /api/channels/:id/ban?userId=xxx - Odbanuj
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { channelId: string } }
+  context: { params: Promise<{ channelId: string }> }
 ) {
   try {
+    const params = await context.params;
     const userId = await verifyAuth(req);
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

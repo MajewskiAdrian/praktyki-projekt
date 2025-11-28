@@ -155,8 +155,9 @@ export default function EventData({ event, onClose }: EventDataProps) {
   const displayCreator = fullEventData?.creator || event.creator;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+    <div className="flex flex-col h-full max-h-full">
+      {/* Header - Fixed */}
+      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <h3 className="text-2xl font-bold text-black dark:text-white">
           {event.title}
         </h3>
@@ -168,127 +169,158 @@ export default function EventData({ event, onClose }: EventDataProps) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 pb-24" style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'rgb(209 213 219) transparent'
-      }}>
+      {/* Scrollable Content */}
+      <div 
+        className="flex-1 overflow-y-auto px-6 py-6 min-h-0"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgb(209 213 219) transparent'
+        }}
+      >
         <div className="space-y-6">
+          {/* Description */}
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
               Description
             </h4>
-            <p className="text-black dark:text-white text-base leading-relaxed">
+            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
               {event.description}
             </p>
           </div>
 
+          {/* Tags */}
           {normalizedTags.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
                 Tags
               </h4>
               <div className="flex flex-wrap gap-2">
-                {normalizedTags.map((tag, index) => (
-                  <div
-                    key={`tag-${index}-${tag}`}
-                    className="bg-amber-100 dark:bg-amber-700 text-amber-800 dark:text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                {normalizedTags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-amber-500 text-white text-sm rounded-full"
                   >
                     {tag}
-                  </div>
+                  </span>
                 ))}
               </div>
             </div>
           )}
 
+          {/* Author */}
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
               Author
             </h4>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
               {displayCreator?.avatarUrl ? (
                 <img
-                  src={displayCreator.avatarUrl.startsWith('/') ? displayCreator.avatarUrl : `/${displayCreator.avatarUrl}`}
-                  alt={displayCreator?.name || "Author avatar"}
-                  className="h-10 w-10 rounded-full object-cover"
+                  src={displayCreator.avatarUrl}
+                  alt={displayCreator.name || "Creator"}
+                  className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex items-center justify-center text-sm font-semibold">
+                <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold">
                   {getInitials(displayCreator?.name)}
                 </div>
               )}
-              <div className="text-sm">
-                <div className="text-black dark:text-white text-base">
-                  {displayCreator?.name ?? "Unknown"}
-                </div>
-                {/* {displayCreator?.email && (
-                  <div className="text-gray-500 dark:text-gray-400 text-xs">
-                    {displayCreator.email}
-                  </div>
-                )} */}
-              </div>
+              <span className="text-gray-800 dark:text-gray-200 font-medium">
+                {displayCreator?.name || "Unknown"}
+              </span>
             </div>
           </div>
 
+          {/* Location */}
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
               Location
             </h4>
-            <p className="text-black dark:text-white text-base">
-              {locationName || "Loading location..."}
+            <p className="text-gray-800 dark:text-gray-200 break-words">
+              {locationName || `${event.latitude}, ${event.longitude}`}
             </p>
           </div>
 
-          <div>
-            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-              How to get there
-            </h4>
-            <p className="text-black dark:text-white text-base">
-              {mapsUrl ? (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-600 hover:underline"
-                >
-                  Open in Google Maps
-                </a>
-              ) : (
-                <span className="text-gray-500">Coordinates not available</span>
-              )}
-            </p>
-          </div>
+          {/* Google Maps Link */}
+          {mapsUrl && (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                How to get there
+              </h4>
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 underline"
+              >
+                Open in Google Maps
+              </a>
+            </div>
+          )}
 
+          {/* Date & Time */}
           <div>
             <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
               Date & Time
             </h4>
-            <p className="text-black dark:text-white text-base">
-              {new Date(event.eventDate).toLocaleString(undefined, {
-                year: "numeric",
+            <p className="text-gray-800 dark:text-gray-200">
+              {new Date(event.eventDate).toLocaleString("pl-PL", {
+                day: "2-digit",
                 month: "short",
-                day: "numeric",
+                year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </p>
           </div>
 
+          {/* Attendees - with LIMITED height and OWN scroll */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-              Attendees ({attendees.length}{event.maxAttendees ? `/${event.maxAttendees}` : ''})
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
+              Attendees ({attendees.length}
+              {event.maxAttendees ? `/${event.maxAttendees}` : ""})
             </h4>
-            <EventAttendees
-              eventId={String(event.id)}
-              initialAttendees={attendees}
-              onAttendeesUpdate={setAttendees}
-              maxAttendees={event.maxAttendees ?? undefined}
-            />
+            <div 
+              className="space-y-2 overflow-y-auto pr-2"
+              style={{
+                maxHeight: '200px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgb(209 213 219) transparent'
+              }}
+            >
+              {attendees.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  No attendees yet
+                </p>
+              ) : (
+                attendees.map((attendee: any) => (
+                  <div
+                    key={attendee.id}
+                    className="flex items-center gap-3 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                  >
+                    {attendee.avatarUrl ? (
+                      <img
+                        src={attendee.avatarUrl}
+                        alt={attendee.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                        {getInitials(attendee.name)}
+                      </div>
+                    )}
+                    <span className="text-gray-800 dark:text-gray-200 text-sm">
+                      {attendee.name}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Fixed button at bottom */}
-      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+      {/* Fixed Button at Bottom */}
+      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
         <JoinEventButton
           eventId={event.id}
           initialIsJoined={isUserJoined}

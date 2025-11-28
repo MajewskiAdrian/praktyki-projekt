@@ -56,8 +56,8 @@ export default function ReactionButton({
       disabled={loading}
       className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-all ${
         isUserReaction
-          ? 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-700'
-          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+          ? 'border border-amber-300 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-700/20 dark:hover:bg-amber-700/30 dark:border-amber-400 dark:text-amber-300'
+          : 'border border-gray-200 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
       } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       title={isUserReaction ? `${users.join(', ')} (Click to remove)` : users.join(', ')}
     >
