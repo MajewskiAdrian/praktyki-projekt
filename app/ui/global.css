@@ -9,6 +9,73 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 
+/* --- POPUP LEAFLET --- */
+.leaflet-popup-content-wrapper {
+  background: #ffffff; /* light mode */
+  color: #1f1f1f;
+  border-radius: 12px;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  border: 1px solid #ccc;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff;
+  border: 1px solid #ccc;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #333;
+}
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #000;
+}
+
+/* Dark mode dla popupów */
+html.dark .leaflet-popup-content-wrapper {
+  background: #181818 !important;
+  color: #f5f5f5 !important; /* tekst, np. czas */
+  border: 1px solid #333 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark .leaflet-popup-tip {
+  background: #181818 !important;
+  border: 1px solid #333 !important;
+}
+
+html.dark .leaflet-container a.leaflet-popup-close-button {
+  color: #ccc !important;
+}
+html.dark .leaflet-container a.leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+/* --- ATTRIBUTION --- */
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.6);
+  color: #222;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+html.dark .leaflet-control-attribution {
+  background: rgba(30, 30, 30, 0.7);
+  color: #aaa;
+}
+
+
+
+
+
 /* Reset i globalne style */
 html, body {
   margin: 0;

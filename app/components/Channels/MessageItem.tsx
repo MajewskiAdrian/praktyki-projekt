@@ -64,15 +64,15 @@ export default function MessageItem({
   }, {});
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-white font-semibold">
           {message.author?.name?.charAt(0).toUpperCase() || '?'}
         </div>
         <div>
-          <span className="font-semibold text-sm">{message.author?.name || 'Unknown'}</span>
-          <span className="text-xs text-gray-500 ml-2">
+          <span className="font-semibold text-sm text-gray-900 dark:text-white">{message.author?.name || 'Unknown'}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
             {new Date(message.createdAt).toLocaleString('pl-PL', {
               day: '2-digit',
               month: '2-digit',
@@ -88,17 +88,17 @@ export default function MessageItem({
       <div className="mb-3">
         {/* TEXT */}
         {message.type === 'TEXT' && (
-          <p className="text-gray-800 whitespace-pre-wrap">{message.content?.text || ''}</p>
+          <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{message.content?.text || ''}</p>
         )}
 
         {/* ANNOUNCEMENT */}
         {message.type === 'ANNOUNCEMENT' && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 p-3 rounded">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">📢</span>
-              <span className="font-semibold text-yellow-800">Announcement</span>
+              <span className="font-semibold text-yellow-800 dark:text-yellow-300">Announcement</span>
             </div>
-            <p className="text-gray-800 whitespace-pre-wrap">{message.content?.text || ''}</p>
+            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{message.content?.text || ''}</p>
           </div>
         )}
 
@@ -106,13 +106,13 @@ export default function MessageItem({
         {message.type === 'IMAGE' && (
           <div>
             {message.content?.text && (
-              <p className="text-gray-800 mb-2 whitespace-pre-wrap">{message.content.text}</p>
+              <p className="text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap">{message.content.text}</p>
             )}
             {message.content?.imageUrl && (
               <img 
                 src={message.content.imageUrl} 
                 alt="Message image" 
-                className="max-w-md rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="max-w-md rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => window.open(message.content.imageUrl, '_blank')}
               />
             )}
@@ -133,7 +133,7 @@ export default function MessageItem({
       </div>
 
       {/* Reactions */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
         {Object.entries(groupedReactions).map(([emoji, data]: [string, any]) => {
           const isUserReaction = currentUserId && data.userIds.includes(currentUserId);
           

@@ -9,7 +9,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md flex flex-col gap-6">
 
         <div className="flex justify-center">
-          <Image src="/logo.png" alt="Venn Logo" width={200} height={90} />
+          <Image 
+            src="/logo.png" 
+            alt="Venn Logo" 
+            width={200} 
+            height={90}
+            priority
+            unoptimized
+          />
         </div>
 
         <LoginForm />

@@ -74,13 +74,13 @@ export default function EventsList({
 
   const MembershipFilterToggle = () => (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Uczestnictwo:</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Participation:</span>
       <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
         {([
-          { key: "all", label: "Wszystkie" },
-          { key: "joined", label: "Dołączone" },
-          { key: "not_joined", label: "Nie dołączone" },
-          { key: "mine", label: "Moje" },
+          { key: "all", label: "All" },
+          { key: "joined", label: "Joined" },
+          { key: "not_joined", label: "Not Joined" },
+          { key: "mine", label: "Mine" },
         ] as { key: MembershipFilter; label: string }[]).map(({ key, label }) => {
           const active = membershipFilter === key;
           return (
@@ -107,7 +107,7 @@ export default function EventsList({
     setError(null);
     fetch("/api/events")
       .then(async (res) => {
-        if (!res.ok) throw new Error((await res.text()) || "Błąd serwera");
+        if (!res.ok) throw new Error((await res.text()) || "Server error");
         return res.json();
       })
       .then((data: any[]) => {
@@ -221,16 +221,10 @@ export default function EventsList({
     return (
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Sortuj według
-          </label>
           <ListSort sortBy={sortBy} setSortBy={setSortBy} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Zakres dat
-          </label>
           <DateRangeFilter
             startDate={startDate}
             endDate={endDate}
@@ -243,9 +237,6 @@ export default function EventsList({
 
         {availableTags.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filtry tagów
-            </label>
             <ListFilter
               availableTags={availableTags}
               selectedTags={selectedTags}
@@ -274,7 +265,7 @@ export default function EventsList({
       <div className="flex-1 overflow-y-auto">
         {filteredEvents.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            Brak wyników dla wybranych filtrów
+            No results for selected filters
           </div>
         ) : (
           <ul className="p-4 space-y-3">
@@ -313,7 +304,7 @@ export default function EventsList({
                             : "bg-gray-400 dark:bg-gray-500"
                         }`}
                       />
-                      {isCreator ? "Moje" : isJoined ? "Dołączono" : "Nie dołączono"}
+                      {isCreator ? "Mine" : isJoined ? "Joined" : ""}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
@@ -339,7 +330,7 @@ export default function EventsList({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span>{e.location || "Brak lokalizacji"}</span>
+                      <span>{e.location || "No location"}</span>
                     </span>
                   </div>
                   {e.tags && e.tags.length > 0 && (

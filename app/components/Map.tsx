@@ -9,6 +9,7 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+
 import L from "leaflet";
 import LocationSearch from "./LocationSearch";
 import { getLocation, subscribe, setLocation } from '@/lib/locationStore';
@@ -314,9 +315,7 @@ export default function Map({
         zoom={11}
         scrollWheelZoom={true}
         className="w-full h-full rounded-lg z-0"
-        style={{
-          filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-        }}
+        
         minZoom={3}
         maxBounds={[
           [85, -180],
@@ -327,9 +326,14 @@ export default function Map({
         <MapController center={centerLocation} />
         <ResizeRevalidator />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url={
+            isDarkMode
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          }
         />
+
         <LocationPicker
           onSelect={(lat, lng) => {
             setMarkerPosition([lat, lng]);
@@ -341,6 +345,7 @@ export default function Map({
           <Marker
             position={markerPosition}
             ref={markerRef}
+            
             eventHandlers={{
               add: (e) => {
                 e.target.openPopup();
@@ -355,13 +360,10 @@ export default function Map({
           >
             <Popup>
               <div
-                style={{
-                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                }}
-                className="text-center p-3"
+                className="text-center m-0 p-0"
               >
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 font-medium">
-                  Wybrano lokalizację
+                <p className="text-sm text-gray-600 dark:text-white mb-3 font-medium">
+                  Choose location for new event
                 </p>
                 <button
                   type="button"
@@ -376,7 +378,7 @@ export default function Map({
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Stwórz nowy event
+                  Create new event
                 </button>
               </div>
             </Popup>
@@ -403,10 +405,7 @@ export default function Map({
           >
             <Popup>
               <div
-                style={{
-                  filter: isDarkMode ? "invert(1) hue-rotate(180deg)" : "none",
-                }}
-                className="bg-white dark:bg-black p-4 rounded-xl min-w-[200px]"
+                className="bg-white dark:bg-[#181818] p-0 m-0 rounded-xl min-w-[200px]"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
                   {event.title}
@@ -441,7 +440,7 @@ export default function Map({
                   }}
                   className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
-                  Zobacz szczegóły
+                  View details
                 </button>
               </div>
             </Popup>

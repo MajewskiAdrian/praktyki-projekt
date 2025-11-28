@@ -544,7 +544,7 @@ export default function DashboardPage() {
             Welcome to the Dashboard {profile ? profile.name : "user"}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Zarządzaj swoimi wydarzeniami i kanałami
+            Manage your events and followed channels here.
           </p>
         </div>
 

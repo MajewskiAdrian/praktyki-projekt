@@ -51,7 +51,7 @@ export default function LocationSearch({ onSelectLocation, initialQuery, endpoin
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           type="text"
-          placeholder="Wpisz adres, miasto..."
+          placeholder="Enter address, city..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="border px-3 py-2 rounded flex-1"
@@ -60,11 +60,11 @@ export default function LocationSearch({ onSelectLocation, initialQuery, endpoin
           type="submit"
           className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
         >
-          Szukaj
+          Search
         </button>
       </form>
 
-      {loading && <div className="mt-2 text-sm text-gray-500">Szukam...</div>}
+      {loading && <div className="mt-2 text-sm text-gray-500">Searching...</div>}
       {error && <div className="mt-2 text-sm text-red-500">{error}</div>}
 
       {results.length > 0 && (
