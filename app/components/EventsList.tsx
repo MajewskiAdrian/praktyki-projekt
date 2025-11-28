@@ -6,6 +6,19 @@ import ListFilter from "./ListFilter";
 import DateRangeFilter from "./DateRangeFilter";
 import EventListSkeleton from "./EventListSkeleton";
 
+// Haversine formula to compute distance in kilometers between two lat/lng points
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -21,6 +34,7 @@ export interface Event {
   address?: string | null;
   neighborhood?: string | null;
   city?: string | null;
+  distanceKm?: number | null;
 }
 
 export type MembershipFilter = "all" | "joined" | "not_joined" | "mine";
@@ -33,8 +47,8 @@ interface EventsListProps {
   useModal?: boolean;
   searchText: string;
   setSearchText: (text: string) => void;
-  sortBy: "date" | "title";
-  setSortBy: (sort: "date" | "title") => void;
+  sortBy: "date" | "title" | "distance";
+  setSortBy: (sort: "date" | "title" | "distance") => void;
   selectedTags: string[];
   setSelectedTags: (tags: string[]) => void;
   startDate: string;
@@ -43,6 +57,11 @@ interface EventsListProps {
   setEndDate: (date: string) => void;
   membershipFilter: MembershipFilter;
   setMembershipFilter: (v: MembershipFilter) => void;
+  // optional shared location state (if provided, will be used instead of internal state)
+  userLocation?: { lat: number; lng: number } | null;
+  setUserLocation?: (coords: { lat: number; lng: number } | null) => void;
+  locationError?: string | null;
+  setLocationError?: (err: string | null) => void;
 }
 
 export default function EventsList({
@@ -63,11 +82,17 @@ export default function EventsList({
   setEndDate,
   membershipFilter,
   setMembershipFilter,
+  userLocation,
+  setUserLocation,
+  locationError,
+  setLocationError,
 }: EventsListProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [localLocationError, setLocalLocationError] = useState<string | null>(null);
+  const [localUserLocation, setLocalUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -200,6 +225,19 @@ export default function EventsList({
       result.sort(
         (a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
       );
+    } else if (sortBy === "distance") {
+      const effectiveLoc = userLocation ?? localUserLocation;
+      const setErr = setLocationError ?? setLocalLocationError;
+      // If distance sort requested but no user location, keep as-is and show a hint
+      if (!effectiveLoc) {
+        setErr("Location not available. Please allow location access via the 'Use my location' button.");
+      } else {
+        setErr(null);
+        // compute distances and sort
+        result = result
+          .map((e) => ({ ...e, distanceKm: haversine(e.latitude, e.longitude, effectiveLoc.lat, effectiveLoc.lng) }))
+          .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
+      }
     } else {
       result.sort((a, b) => a.title.localeCompare(b.title));
     }
@@ -212,6 +250,8 @@ export default function EventsList({
     endDate,
     selectedTags,
     sortBy,
+    userLocation,
+    localUserLocation,
     membershipFilter,
     currentUserId,
     joinedIds
@@ -221,7 +261,24 @@ export default function EventsList({
     return (
       <div className="space-y-4">
         <div>
-          <ListSort sortBy={sortBy} setSortBy={setSortBy} />
+          <ListSort sortBy={sortBy} setSortBy={setSortBy} onUseLocation={(coords, err) => {
+            const applyErr = (msg: string | null) => {
+              if (setLocationError) return setLocationError(msg);
+              return setLocalLocationError(msg);
+            };
+            const applyUserLoc = (c: { lat: number; lng: number } | null) => {
+              if (setUserLocation) return setUserLocation(c);
+              return setLocalUserLocation(c);
+            };
+            if (err) {
+              applyErr(err);
+              return;
+            }
+            if (coords) {
+              applyUserLoc(coords);
+              applyErr(null);
+            }
+          }} />
         </div>
 
         <div>
@@ -263,6 +320,9 @@ export default function EventsList({
       )}
 
       <div className="flex-1 overflow-y-auto">
+            {(locationError ?? localLocationError) && (
+              <div className="p-3 m-3 rounded bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">{locationError ?? localLocationError}</div>
+            )}
         {filteredEvents.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             No results for selected filters
@@ -330,7 +390,12 @@ export default function EventsList({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span>{e.location || "No location"}</span>
+                      <span>
+                        {e.location || "No location"}
+                        {typeof e.distanceKm === "number" && (
+                          <span className="ml-2 text-amber-600">· {e.distanceKm.toFixed(1)} km</span>
+                        )}
+                      </span>
                     </span>
                   </div>
                   {e.tags && e.tags.length > 0 && (

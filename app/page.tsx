@@ -34,11 +34,13 @@ export default function Home() {
 
   // Shared filter state
   const [searchText, setSearchText] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
+  const [sortBy, setSortBy] = useState<"date" | "title" | "distance">("date");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const handleEventAdded = (newEvent: MyEvent) => {
     setRefreshKey((prev) => prev + 1);
@@ -187,6 +189,10 @@ export default function Home() {
                   setEndDate={setEndDate}
                   membershipFilter={membershipFilter}
                   setMembershipFilter={setMembershipFilter}
+                  userLocation={userLocation}
+                  setUserLocation={setUserLocation}
+                  locationError={locationError}
+                  setLocationError={setLocationError}
                 />
               </div>
             </div>
@@ -239,6 +245,10 @@ export default function Home() {
                 setEndDate={setEndDate}
                 membershipFilter={membershipFilter}
                 setMembershipFilter={setMembershipFilter}
+                userLocation={userLocation}
+                setUserLocation={setUserLocation}
+                locationError={locationError}
+                setLocationError={setLocationError}
               />
             )}
           </div>
@@ -347,6 +357,10 @@ export default function Home() {
                     setEndDate={setEndDate}
                     membershipFilter={membershipFilter}
                     setMembershipFilter={setMembershipFilter}
+                    userLocation={userLocation}
+                    setUserLocation={setUserLocation}
+                    locationError={locationError}
+                    setLocationError={setLocationError}
                   />
                 </div>
               )}
