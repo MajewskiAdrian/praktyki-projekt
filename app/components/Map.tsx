@@ -363,7 +363,7 @@ export default function Map({
                 className="text-center m-0 p-0"
               >
                 <p className="text-sm text-gray-600 dark:text-white mb-3 font-medium">
-                  Choose location for new event
+                  Location selected
                 </p>
                 <button
                   type="button"

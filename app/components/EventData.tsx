@@ -140,6 +140,14 @@ export default function EventData({ event, onClose }: EventDataProps) {
     }
   };
 
+  // Build a safe Google Maps URL when coordinates are available.
+  const mapsUrl =
+    event?.latitude != null && event?.longitude != null
+      ? `https://www.google.com/maps?q=${encodeURIComponent(
+          `${event.latitude},${event.longitude}`
+        )}`
+      : null;
+
   if (isLoading) {
     return <EventDataSkeleton onClose={onClose} />;
   }
@@ -227,6 +235,26 @@ export default function EventData({ event, onClose }: EventDataProps) {
             </h4>
             <p className="text-black dark:text-white text-base">
               {locationName || "Loading location..."}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
+              How to get there
+            </h4>
+            <p className="text-black dark:text-white text-base">
+              {mapsUrl ? (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-600 hover:underline"
+                >
+                  Open in Google Maps
+                </a>
+              ) : (
+                <span className="text-gray-500">Coordinates not available</span>
+              )}
             </p>
           </div>
 

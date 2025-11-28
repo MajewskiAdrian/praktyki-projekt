@@ -31,10 +31,12 @@
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-  color: #333;
+  color: #333 !important;
+  margin: 4px;
 }
 .leaflet-container a.leaflet-popup-close-button:hover {
-  color: #000;
+  color: #000 !important;
+  margin: 4px;
 }
 
 /* Dark mode dla popupów */
@@ -52,9 +54,11 @@ html.dark .leaflet-popup-tip {
 
 html.dark .leaflet-container a.leaflet-popup-close-button {
   color: #ccc !important;
+  margin: 4px;
 }
 html.dark .leaflet-container a.leaflet-popup-close-button:hover {
   color: #fff !important;
+  margin: 4px;
 }
 
 /* --- ATTRIBUTION --- */
