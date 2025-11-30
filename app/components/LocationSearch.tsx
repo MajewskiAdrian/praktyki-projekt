@@ -58,7 +58,7 @@ export default function LocationSearch({ onSelectLocation, initialQuery, endpoin
         />
         <button
           type="submit"
-          className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+          className="bg-amber-500 text-white px-4 py-2 rounded font-medium hover:bg-amber-600 transition-colors shadow-sm shadow-amber-500/30"
         >
           Search
         </button>
