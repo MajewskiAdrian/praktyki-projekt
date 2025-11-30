@@ -736,7 +736,7 @@ export default function DashboardPage() {
             onClick={() => setSelectedEvent(null)}
           />
 
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-fadeIn">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn">
             <EventData
               event={selectedEvent}
               onClose={() => setSelectedEvent(null)}
@@ -753,7 +753,7 @@ export default function DashboardPage() {
             onClick={() => setEditingEventId(null)}
           />
 
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto overflow-hidden animate-fadeIn">
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Event</h2>
               <button

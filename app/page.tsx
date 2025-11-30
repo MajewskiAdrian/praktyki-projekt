@@ -223,7 +223,7 @@ export default function Home() {
               </div>
             ) : selectedEvent ? (
               <div className="h-full">
-                <EventData event={selectedEvent as any} onClose={() => setSelectedEvent(null)} />
+                      <EventData event={selectedEvent as any} onClose={() => setSelectedEvent(null)} />
               </div>
             ) : (
               <EventsList
