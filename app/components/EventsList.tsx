@@ -346,26 +346,24 @@ export default function EventsList({
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">
                       {e.title}
                     </h3>
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        isCreator
-                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
-                          : isJoined
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                      }`}
-                    >
+                    {isCreator || isJoined ? (
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                           isCreator
-                            ? "bg-blue-500"
-                            : isJoined
-                            ? "bg-green-500"
-                            : "bg-gray-400 dark:bg-gray-500"
+                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                            : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                         }`}
-                      />
-                      {isCreator ? "Mine" : isJoined ? "Joined" : ""}
-                    </span>
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isCreator ? "bg-blue-500" : "bg-green-500"
+                          }`}
+                        />
+                        {isCreator ? "Mine" : "Joined"}
+                      </span>
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500" />
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                     {e.description}
