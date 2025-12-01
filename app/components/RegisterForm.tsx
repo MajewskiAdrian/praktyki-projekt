@@ -87,7 +87,7 @@ export default function RegisterForm() {
       </div>
 
       <p className="text-gray-500 text-center mb-8">
-        Join Venn and start exploring your city with friends
+        Turn your city into a social map — pin hangouts, join friends, and meet new people
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
